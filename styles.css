@@ -380,7 +380,7 @@ button {
 .page-view {
   display: none;
   width: 100%;
-  padding-top: 116px;
+  padding-top: 112px;
   opacity: 0;
   transform: translateY(16px) scale(0.995);
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2441,8 +2441,11 @@ button {
 }
 
 @media (max-width: 768px) {
+  .page-view {
+    padding-top: 64px !important;
+  }
   .filter-bar {
-    top: 76px !important;
+    top: 64px !important;
   }
   .top-bar {
     display: none;
@@ -4033,7 +4036,10 @@ button {
 /* Breakpoint 480px Small Mobile Phones */
 @media (max-width: 480px) {
   .page-view {
-    padding-top: 94px !important;
+    padding-top: 60px !important;
+  }
+  .filter-bar {
+    top: 60px !important;
   }
   .brand-logo {
     height: 32px !important;
