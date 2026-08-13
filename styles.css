@@ -239,19 +239,19 @@ button {
 }
 
 .brand-logo {
-  height: 46px;
+  height: 52px;
   width: auto;
   object-fit: contain;
 }
 
 .brand-wordmark {
-  height: 36px;
+  height: 48px;
   width: auto;
   object-fit: contain;
 }
 
 .footer-brand-wordmark {
-  height: 42px;
+  height: 60px;
   width: auto;
   object-fit: contain;
   margin-bottom: 16px;
