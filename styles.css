@@ -251,11 +251,14 @@ button {
 }
 
 .footer-brand-wordmark {
-  height: 60px;
+  height: 56px;
   width: auto;
   object-fit: contain;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   filter: brightness(0.15);
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
 }
 
 .nav-links {
@@ -1993,6 +1996,8 @@ button {
 .footer-brand-box {
   display: flex;
   flex-direction: column;
+  align-items: flex-start !important;
+  text-align: left !important;
   gap: 16px;
 }
 
