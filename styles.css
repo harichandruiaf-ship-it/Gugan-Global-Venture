@@ -244,25 +244,18 @@ button {
   object-fit: contain;
 }
 
-.brand-title-group {
-  display: flex;
-  flex-direction: column;
+.brand-wordmark {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
-.brand-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--color-text-dark);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.brand-subtitle {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-brand-red);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.footer-brand-wordmark {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 16px;
+  filter: brightness(0.15);
 }
 
 .nav-links {
