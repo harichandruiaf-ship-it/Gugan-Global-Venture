@@ -4,6 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initPreloader();
   initNavigation();
   initFilterPills();
   initDualMultiSelects();
@@ -16,6 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
   initFaqAccordion();
   initMobileMenu();
 });
+
+// Preloader Controller
+function initPreloader() {
+  const preloader = document.getElementById('appPreloader');
+  if (!preloader) return;
+
+  function hidePreloader() {
+    preloader.classList.add('loaded');
+  }
+
+  if (document.readyState === 'complete') {
+    setTimeout(hidePreloader, 400);
+  } else {
+    window.addEventListener('load', () => setTimeout(hidePreloader, 300));
+    // Fallback safety timeout (1.2s max wait)
+    setTimeout(hidePreloader, 1200);
+  }
+}
 
 // View Navigation & Hash Handling
 // View Navigation & Hash Handling
