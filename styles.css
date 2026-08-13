@@ -932,36 +932,95 @@ button {
   color: #808080;
 }
 
-/* Official Seals Bar (Height: 222px, Radius: 97px) */
-.official-seals-bar {
+/* Infinite Auto-Scrolling Accreditation Seals Marquee Bar */
+.seals-marquee-wrapper {
   width: 100%;
-  max-width: 1400px;
-  min-height: 120px;
-  height: auto;
-  margin: 48px auto 0 auto;
-  background: #FCF8F1;
+  overflow: hidden;
+  background: var(--color-bg-warm, #FCF8F1);
   border: 1px solid #E6E6E6;
   border-radius: 70px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-around;
-  padding: 20px 40px;
-  gap: 20px;
+  padding: 16px 24px;
+  position: relative;
+  margin-top: 48px;
 }
 
-.seal-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: #222222;
-  font-size: 13px;
-  font-weight: 600;
+.seals-marquee-wrapper::before,
+.seals-marquee-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.seal-item i {
-  color: var(--color-brand-red);
+.seals-marquee-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #FCF8F1 0%, rgba(252, 248, 241, 0) 100%);
+  border-top-left-radius: 70px;
+  border-bottom-left-radius: 70px;
+}
+
+.seals-marquee-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, #FCF8F1 0%, rgba(252, 248, 241, 0) 100%);
+  border-top-right-radius: 70px;
+  border-bottom-right-radius: 70px;
+}
+
+.seals-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  width: max-content;
+  animation: sealsMarqueeScroll 28s linear infinite;
+  will-change: transform;
+}
+
+.seals-marquee-wrapper:hover .seals-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes sealsMarqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.seal-logo-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #FFFFFF;
+  padding: 8px 22px;
+  border-radius: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  flex-shrink: 0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.seal-logo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.seal-img {
+  height: 52px;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
+}
+
+.seal-logo-item span {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-dark, #222222);
+  white-space: nowrap;
 }
 
 /* ==========================================================================
