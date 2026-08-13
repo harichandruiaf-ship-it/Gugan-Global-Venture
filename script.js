@@ -1,0 +1,1512 @@
+/**
+ * Gugan Global Venture - Interactive Client Script
+ * B2B Spice Export Portal & Interactive Catalog Engine
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  initNavigation();
+  initFilterPills();
+  initDualMultiSelects();
+  initModals();
+  initTradeInquiryForm();
+  initInteractiveCatalog();
+  initFloatingContactWidget();
+  initBackToTopButton();
+  initScrollReveal();
+  initFaqAccordion();
+  initMobileMenu();
+});
+
+// View Navigation & Hash Handling
+// View Navigation & Hash Handling
+function initNavigation() {
+  const navLinks = document.querySelectorAll('.nav-link');
+  const pageViews = document.querySelectorAll('.page-view');
+
+  function switchView(targetId) {
+    pageViews.forEach(view => {
+      if (view.id === targetId) {
+        view.classList.add('active-view');
+      } else {
+        view.classList.remove('active-view');
+      }
+    });
+
+    navLinks.forEach(link => {
+      const linkView = link.getAttribute('data-view');
+      if (linkView === targetId || (targetId === 'view-certificates' && linkView === 'view-about')) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // Also update dropdown items active state
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+      const itemView = item.getAttribute('data-view');
+      if (itemView === targetId) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+
+    // Dynamic Document Title Updates for SEO
+    const titleMap = {
+      'view-home': 'Gugan Global Venture | Premium B2B Indian Spice Exporter',
+      'view-products': 'Premium Indian Spices Export Portfolio | Gugan Global Venture',
+      'view-export-process': 'Export Process & Quality Assurance | Gugan Global Venture',
+      'view-about': 'About Us - Trusted Indian Spice Exporters | Gugan Global Venture',
+      'view-certificates': 'Official Accreditation & Export Certificates | Gugan Global Venture',
+      'view-contact': 'Contact Export Sales Desk & Request Quotes | Gugan Global Venture'
+    };
+    if (titleMap[targetId]) {
+      document.title = titleMap[targetId];
+    }
+
+    if (window.triggerScrollRevealCheck) {
+      window.triggerScrollRevealCheck();
+    }
+  }
+
+  window.navigateToProduct = function(productId, varietyKey) {
+    switchView('view-products');
+
+    const targetBlock = document.getElementById(productId);
+    if (!targetBlock) return;
+
+    if (varietyKey && targetBlock._showVariety) {
+      targetBlock._showVariety(varietyKey);
+      const panel = targetBlock.querySelector('[data-role="variety-panel"]');
+      const toggleBtn = targetBlock.querySelector('[data-action="toggle-varieties"]');
+      if (panel && toggleBtn) {
+        panel.hidden = false;
+        panel.removeAttribute("hidden");
+        panel.classList.add("open");
+        toggleBtn.setAttribute("aria-expanded", "true");
+        toggleBtn.innerHTML = `Hide Varieties <span class="chevron">▴</span>`;
+      }
+    }
+
+    const filterPills = document.querySelectorAll('.filter-pill');
+    filterPills.forEach(p => {
+      const cat = p.getAttribute('data-filter') || p.getAttribute('data-spice');
+      if (cat === productId) p.classList.add('active');
+      else p.classList.remove('active');
+    });
+
+    setTimeout(() => {
+      const specCard = targetBlock.querySelector('.spec-product-card') || targetBlock;
+      const yOffset = -130;
+      const y = specCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+
+      specCard.classList.remove('section-focus-glow');
+      void specCard.offsetWidth;
+      specCard.classList.add('section-focus-glow');
+
+      setTimeout(() => {
+        specCard.classList.remove('section-focus-glow');
+      }, 2000);
+    }, 120);
+  };
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const viewId = link.getAttribute('data-view');
+      if (viewId) {
+        window.location.hash = viewId;
+        switchView(viewId);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Handle hash changes
+  function handleHash() {
+    const rawHash = (window.location.hash.replace('#', '') || '').trim() || 'view-home';
+    const validProducts = ['chilli', 'turmeric', 'pepper', 'cardamom'];
+
+    if (validProducts.includes(rawHash)) {
+      window.navigateToProduct(rawHash);
+      return;
+    }
+
+    if (rawHash.includes('-')) {
+      const firstHyphenIndex = rawHash.indexOf('-');
+      const possibleProduct = rawHash.substring(0, firstHyphenIndex);
+      const possibleVariety = rawHash.substring(firstHyphenIndex + 1);
+
+      if (validProducts.includes(possibleProduct)) {
+        window.navigateToProduct(possibleProduct, possibleVariety);
+        return;
+      }
+    }
+
+    const targetElement = document.getElementById(rawHash);
+    if (targetElement && targetElement.classList.contains('page-view')) {
+      switchView(rawHash);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      switchView('view-home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  window.addEventListener('hashchange', handleHash);
+  handleHash();
+
+  // Global Click Delegation for data-navigate and data-product
+  document.addEventListener('click', (e) => {
+    const navBtn = e.target.closest('[data-navigate]');
+    if (navBtn) {
+      e.preventDefault();
+      const target = navBtn.getAttribute('data-navigate');
+      const scrollTargetId = navBtn.getAttribute('data-target');
+      if (target) {
+        window.location.hash = target;
+        switchView(target);
+        if (scrollTargetId) {
+          setTimeout(() => {
+            const targetEl = document.getElementById(scrollTargetId);
+            if (targetEl) {
+              const yOffset = -120;
+              const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+          }, 150);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+      return;
+    }
+
+    const productBtn = e.target.closest('[data-product]');
+    if (productBtn) {
+      e.preventDefault();
+      const productId = productBtn.getAttribute('data-product');
+      const varietyKey = productBtn.getAttribute('data-variety') || null;
+      if (productId) {
+        window.location.hash = varietyKey ? `${productId}-${varietyKey}` : productId;
+        window.navigateToProduct(productId, varietyKey);
+      }
+    }
+  });
+}
+
+// Filter Pills on Products Page with Scroll-Spy
+function initFilterPills() {
+  const filterPills = document.querySelectorAll('.filter-pill');
+
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      const filterCategory = pill.getAttribute('data-filter') || pill.getAttribute('data-spice');
+      const targetBlock = document.getElementById(filterCategory);
+      if (targetBlock) {
+        targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // IntersectionObserver to sync active pill with scroll position
+  if ('IntersectionObserver' in window) {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-150px 0px -50% 0px',
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          filterPills.forEach(p => {
+            const cat = p.getAttribute('data-filter') || p.getAttribute('data-spice');
+            if (cat === id) {
+              p.classList.add('active');
+            } else {
+              p.classList.remove('active');
+            }
+          });
+        }
+      });
+    }, observerOptions);
+
+    setTimeout(() => {
+      document.querySelectorAll('.spice-block').forEach(block => {
+        observer.observe(block);
+      });
+    }, 300);
+  }
+}
+
+// Helper to safely escape HTML strings
+function escapeHTML(str) {
+  if (typeof str !== 'string') return str || '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Master Dataset for B2B Spice Varieties grouped by category
+const SPICE_VARIETIES_MASTER = [
+  // Red Chilli
+  { category: 'chilli', key: 'teja', name: 'Teja S17 Chilli (Guntur - High Heat)' },
+  { category: 'chilli', key: 'sannam-s4', name: 'Sannam S4 Chilli (S10 - Medium Heat)' },
+  { category: 'chilli', key: 'byadgi', name: 'Byadgi Chilli (Karnataka - Deep Red)' },
+  { category: 'chilli', key: '334', name: '334 Sannam Chilli (Popular Export Grade)' },
+  { category: 'chilli', key: 'wonder-hot', name: 'Wonder Hot Chilli (Pungent Export Grade)' },
+
+  // Turmeric
+  { category: 'turmeric', key: 'erode', name: 'Erode Turmeric Finger (Tamil Nadu)' },
+  { category: 'turmeric', key: 'salem', name: 'Salem Turmeric Finger (Golden Yellow)' },
+  { category: 'turmeric', key: 'nizamabad', name: 'Nizamabad Turmeric Finger (Telangana)' },
+  { category: 'turmeric', key: 'rajapuri', name: 'Rajapuri (Sangli) Turmeric (Maharashtra)' },
+  { category: 'turmeric', key: 'lakadong', name: 'Lakadong High-Curcumin Turmeric (7%-12%)' },
+
+  // Black Pepper
+  { category: 'pepper', key: 'mg1', name: 'Malabar Garbled MG1 Pepper (4.0-4.5mm)' },
+  { category: 'pepper', key: 'mug', name: 'Malabar Ungarbled MUG Pepper (Grinding Grade)' },
+  { category: 'pepper', key: 'tgeb', name: 'Tellicherry Garbled Extra Bold TGEB (4.75-5.0mm)' },
+  { category: 'pepper', key: 'tgseb', name: 'Tellicherry Special Extra Bold TGSEB (5.0mm+)' },
+
+  // Green Cardamom
+  { category: 'cardamom', key: 'ageb', name: 'Alleppey Green Extra Bold AGEB (8mm+)' },
+  { category: 'cardamom', key: 'agb', name: 'Alleppey Green Bold AGB (7mm-8mm)' },
+  { category: 'cardamom', key: 'ags', name: 'Alleppey Green Superior AGS (6mm-7mm)' }
+];
+
+const CATEGORY_NAMES = {
+  chilli: '🌶️ Dry Red Chilli',
+  turmeric: '🟡 Turmeric Rhizomes',
+  pepper: '⚫ Black Pepper',
+  cardamom: '🟢 Green Cardamom'
+};
+
+class B2BDualMultiSelect {
+  constructor(categoryElId, varietyElId) {
+    this.catContainer = document.getElementById(categoryElId);
+    this.varContainer = document.getElementById(varietyElId);
+    if (!this.catContainer || !this.varContainer) return;
+
+    this.catTrigger = this.catContainer.querySelector('.b2b-multiselect-trigger');
+    this.catTags = this.catContainer.querySelector('.b2b-tags-container');
+    this.catDropdown = this.catContainer.querySelector('.b2b-multiselect-dropdown');
+
+    this.varTrigger = this.varContainer.querySelector('.b2b-multiselect-trigger');
+    this.varTags = this.varContainer.querySelector('.b2b-tags-container');
+    this.varDropdown = this.varContainer.querySelector('.b2b-multiselect-dropdown');
+
+    this.selectedCategories = new Set();
+    this.selectedVarieties = new Set();
+
+    this.init();
+  }
+
+  init() {
+    this.catTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.closeOtherDropdowns(this.catContainer);
+      this.catContainer.classList.toggle('open');
+      this.catTrigger.setAttribute('aria-expanded', this.catContainer.classList.contains('open'));
+    });
+
+    this.varTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.closeOtherDropdowns(this.varContainer);
+      this.varContainer.classList.toggle('open');
+      this.varTrigger.setAttribute('aria-expanded', this.varContainer.classList.contains('open'));
+    });
+
+    this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+      chk.addEventListener('change', () => {
+        if (chk.checked) {
+          this.selectedCategories.add(chk.value);
+        } else {
+          this.selectedCategories.delete(chk.value);
+        }
+        this.renderCategoryTags();
+        this.updateVarietyDropdown();
+      });
+
+      const parentItem = chk.closest('.b2b-option-item');
+      if (parentItem) {
+        parentItem.addEventListener('click', (e) => {
+          if (e.target !== chk && e.target.tagName !== 'LABEL') {
+            chk.checked = !chk.checked;
+            chk.dispatchEvent(new Event('change'));
+          }
+        });
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (this.catContainer && !this.catContainer.contains(e.target)) {
+        this.catContainer.classList.remove('open');
+        this.catTrigger.setAttribute('aria-expanded', 'false');
+      }
+      if (this.varContainer && !this.varContainer.contains(e.target)) {
+        this.varContainer.classList.remove('open');
+        this.varTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    this.updateVarietyDropdown();
+  }
+
+  closeOtherDropdowns(current) {
+    document.querySelectorAll('.b2b-multiselect').forEach(el => {
+      if (el !== current) {
+        el.classList.remove('open');
+        const trig = el.querySelector('.b2b-multiselect-trigger');
+        if (trig) trig.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  renderCategoryTags() {
+    this.catTags.innerHTML = '';
+    if (this.selectedCategories.size === 0) {
+      this.catTags.innerHTML = `<span class="b2b-placeholder">Select one or more products...</span>`;
+      return;
+    }
+
+    this.selectedCategories.forEach(cat => {
+      const chip = document.createElement('span');
+      chip.className = 'b2b-chip';
+      chip.innerHTML = `${escapeHTML(CATEGORY_NAMES[cat] || cat)} <span class="remove-chip">&times;</span>`;
+      
+      chip.querySelector('.remove-chip').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectedCategories.delete(cat);
+        const chk = this.catDropdown.querySelector(`input[value="${cat}"]`);
+        if (chk) chk.checked = false;
+        this.renderCategoryTags();
+        this.updateVarietyDropdown();
+      });
+
+      this.catTags.appendChild(chip);
+    });
+  }
+
+  updateVarietyDropdown() {
+    const activeCats = Array.from(this.selectedCategories);
+    let allowedVarieties = [];
+
+    if (activeCats.length === 0) {
+      allowedVarieties = SPICE_VARIETIES_MASTER;
+    } else {
+      allowedVarieties = SPICE_VARIETIES_MASTER.filter(v => activeCats.includes(v.category));
+    }
+
+    const allowedKeys = new Set(allowedVarieties.map(v => v.key));
+    this.selectedVarieties.forEach(vKey => {
+      if (!allowedKeys.has(vKey)) {
+        this.selectedVarieties.delete(vKey);
+      }
+    });
+
+    this.varDropdown.innerHTML = '';
+
+    if (allowedVarieties.length === 0) {
+      this.varDropdown.innerHTML = `<div class="b2b-option-item" style="color:#888; cursor:default;">No varieties available</div>`;
+    } else {
+      const grouped = {};
+      allowedVarieties.forEach(v => {
+        if (!grouped[v.category]) grouped[v.category] = [];
+        grouped[v.category].push(v);
+      });
+
+      Object.keys(grouped).forEach(cat => {
+        const header = document.createElement('div');
+        header.className = 'b2b-group-header';
+        header.textContent = CATEGORY_NAMES[cat] || cat;
+        this.varDropdown.appendChild(header);
+
+        grouped[cat].forEach(v => {
+          const item = document.createElement('div');
+          item.className = `b2b-option-item ${this.selectedVarieties.has(v.key) ? 'selected' : ''}`;
+          item.dataset.value = v.key;
+
+          const isChecked = this.selectedVarieties.has(v.key);
+          const chkId = `var_${this.varContainer.id}_${v.key}`;
+          item.innerHTML = `
+            <input type="checkbox" id="${chkId}" value="${v.key}" ${isChecked ? 'checked' : ''}>
+            <label for="${chkId}">${escapeHTML(v.name)}</label>
+          `;
+
+          const chk = item.querySelector('input[type="checkbox"]');
+          chk.addEventListener('change', (e) => {
+            e.stopPropagation();
+            if (chk.checked) {
+              this.selectedVarieties.add(v.key);
+              item.classList.add('selected');
+            } else {
+              this.selectedVarieties.delete(v.key);
+              item.classList.remove('selected');
+            }
+            this.renderVarietyTags();
+          });
+
+          item.addEventListener('click', (e) => {
+            if (e.target !== chk && e.target.tagName !== 'LABEL') {
+              chk.checked = !chk.checked;
+              chk.dispatchEvent(new Event('change'));
+            }
+          });
+
+          this.varDropdown.appendChild(item);
+        });
+      });
+    }
+
+    this.renderVarietyTags();
+  }
+
+  renderVarietyTags() {
+    this.varTags.innerHTML = '';
+    if (this.selectedVarieties.size === 0) {
+      this.varTags.innerHTML = `<span class="b2b-placeholder">Select specific varieties...</span>`;
+      return;
+    }
+
+    this.selectedVarieties.forEach(vKey => {
+      const varObj = SPICE_VARIETIES_MASTER.find(v => v.key === vKey);
+      if (!varObj) return;
+
+      const chip = document.createElement('span');
+      chip.className = 'b2b-chip';
+      chip.innerHTML = `${escapeHTML(varObj.name.split(' (')[0])} <span class="remove-chip">&times;</span>`;
+
+      chip.querySelector('.remove-chip').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectedVarieties.delete(vKey);
+        const chk = this.varDropdown.querySelector(`input[value="${vKey}"]`);
+        if (chk) chk.checked = false;
+        const item = this.varDropdown.querySelector(`.b2b-option-item[data-value="${vKey}"]`);
+        if (item) item.classList.remove('selected');
+        this.renderVarietyTags();
+      });
+
+      this.varTags.appendChild(chip);
+    });
+  }
+
+  setSelections(catKey, varKey) {
+    if (catKey) {
+      this.selectedCategories.clear();
+      this.selectedCategories.add(catKey);
+      this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+        chk.checked = (chk.value === catKey);
+      });
+      this.renderCategoryTags();
+      this.updateVarietyDropdown();
+    }
+
+    if (varKey) {
+      this.selectedVarieties.clear();
+      this.selectedVarieties.add(varKey);
+      const chk = this.varDropdown.querySelector(`input[value="${varKey}"]`);
+      if (chk) chk.checked = true;
+      const item = this.varDropdown.querySelector(`.b2b-option-item[data-value="${varKey}"]`);
+      if (item) item.classList.add('selected');
+      this.renderVarietyTags();
+    }
+  }
+
+  reset() {
+    this.selectedCategories.clear();
+    this.selectedVarieties.clear();
+    this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
+    this.renderCategoryTags();
+    this.updateVarietyDropdown();
+  }
+}
+
+let modalMultiSelectInst = null;
+let contactMultiSelectInst = null;
+
+function initDualMultiSelects() {
+  modalMultiSelectInst = new B2BDualMultiSelect('modalCategoryMultiselect', 'modalVarietyMultiselect');
+  contactMultiSelectInst = new B2BDualMultiSelect('contactCategoryMultiselect', 'contactVarietyMultiselect');
+}
+
+// Modal Controllers
+function initModals() {
+  const modalOverlay = document.getElementById('quoteModal');
+  const closeBtn = document.getElementById('closeModalBtn');
+  const quoteForm = document.getElementById('quoteForm');
+
+  document.querySelectorAll('.open-modal-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const rawSpice = btn.getAttribute('data-spice') || '';
+      const rawVariety = btn.getAttribute('data-variety') || '';
+      const parentBlock = btn.closest('[data-spice]') || btn.closest('[data-product]');
+      const spiceKey = rawSpice || (parentBlock ? (parentBlock.getAttribute('data-spice') || parentBlock.getAttribute('data-product')) : '');
+
+      if (modalMultiSelectInst && spiceKey) {
+        modalMultiSelectInst.setSelections(spiceKey, rawVariety);
+      }
+
+      if (modalOverlay) {
+        modalOverlay.classList.add('active');
+        const firstInput = modalOverlay.querySelector('input, select');
+        if (firstInput) firstInput.focus();
+      }
+    });
+  });
+
+  if (closeBtn && modalOverlay) {
+    closeBtn.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+    });
+  }
+
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('active');
+      }
+    });
+
+    // Modal Focus Trap
+    modalOverlay.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusables = modalOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  if (quoteForm) {
+    quoteForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const inputs = quoteForm.querySelectorAll('input[required]');
+      let isValid = true;
+      inputs.forEach(input => {
+        input.value = input.value.trim();
+        if (!input.value) isValid = false;
+      });
+      if (!isValid) {
+        showToast('Please fill out all required fields.');
+        return;
+      }
+      if (modalOverlay) modalOverlay.classList.remove('active');
+      quoteForm.reset();
+      if (modalMultiSelectInst) modalMultiSelectInst.reset();
+      showToast('Thank you! Your quote request has been sent to our export desk.');
+    });
+  }
+}
+
+// Contact Page Trade Inquiry Form Handler
+function initTradeInquiryForm() {
+  const tradeForm = document.getElementById('tradeInquiryForm');
+  if (tradeForm) {
+    tradeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const inputs = tradeForm.querySelectorAll('input[required]');
+      let isValid = true;
+      inputs.forEach(input => {
+        input.value = input.value.trim();
+        if (!input.value) isValid = false;
+      });
+      if (!isValid) {
+        showToast('Please fill out all required trade inquiry details.');
+        return;
+      }
+      tradeForm.reset();
+      if (contactMultiSelectInst) contactMultiSelectInst.reset();
+      showToast('Inquiry received! Our export desk will contact you within 24 hours.');
+    });
+  }
+}
+
+// Interactive Spice Catalog Engine (Grade Switcher)
+function initInteractiveCatalog() {
+  const catalogRoot = document.getElementById('spice-catalog');
+  if (!catalogRoot) return;
+
+  const catalog = {
+    chilli: {
+      id: "chilli",
+      theme: "chilli",
+      reverse: true,
+      cream: true,
+      badgeClass: "badge-red",
+      specsClass: "red-bg",
+      dot: "#C22E1A",
+      overview: {
+        badge: "RED CHILLI",
+        note: "5 export varieties available",
+        name: "Dry Red Chilli",
+        origin: "Origin: Andhra Pradesh & Karnataka",
+        desc: "Select a variety Below for Heat Range, Colour Value, Moisture, and Packing grades used in export Contracts.",
+        tagline: "Premium Quality • Authentic Origin • Export Excellence",
+        specs: [
+          ["Heat (SHU)", "8,000 – 100,000 SHU"],
+          ["Colour Value (ASTA)", "40 – 140 Max"],
+          ["Forms", "Whole, Stemless, Crushed, Powder"],
+          ["Moisture", "Less Than 10%"],
+          ["Packaging", "PP Bags / Jute / Vacuum"],
+          ["Min. Order Qty", "1 FCL (15-20 MT)"],
+          ["Certifications", "APEDA · FSSAI · Phyto"]
+        ]
+      },
+      varieties: [
+        {
+          key: "teja",
+          name: "Teja (S17)",
+          badge: "EXTREMELY HOT",
+          note: "High capsaicin · flagship export",
+          origin: "Grown mainly in Andhra Pradesh and Telangana",
+          desc: "Teja (S17) is a premium Indian chilli variety known for its exceptional heat, rich red colour, and high capsaicin content. Grown mainly in Andhra Pradesh and Telangana, it is a preferred choice for global spice manufacturers and food processing industries.",
+          tile: "Extremely hot with intense pungency.",
+          metric: "85,000 – 100,000 SHU",
+          forms: "Whole, Stemless, Crushed, Powder",
+          specs: [
+            ["Heat (SHU)", "85,000 – 100,000"],
+            ["Colour Value (ASTA)", "60-80 Max"],
+            ["Flavour", "High Spicy"],
+            ["Moisture", "Less Than 10 %"],
+            ["Length", "6-9 Cm (Without Stem)"],
+            ["Skin", "Thin"],
+            ["Capsaicin", "0.589%"]
+          ]
+        },
+        {
+          key: "sannam-s4",
+          name: "Sannam S4",
+          badge: "BALANCED HEAT",
+          note: "75% of India production · high demand",
+          origin: "Guntur, Warangal & Khammam",
+          desc: "The Guntur Sannam chilli pepper is grown extensively in Guntur, Warangal, and Khammam, and represents 75% of India's total production. One of the most in-demand red chilli varieties out there, it's also sold under the names 334, Sannam, and S-4.",
+          tile: "Perfect balance of heat and colour.",
+          metric: "35,000 – 45,000 SHU",
+          forms: "Whole, Stemless, Crushed, Powder",
+          specs: [
+            ["Heat (SHU)", "35,000 – 45,000"],
+            ["Colour Value (ASTA)", "40-50 Max"],
+            ["Flavour", "Medium Spicy"],
+            ["Moisture", "Less Than 10 %"],
+            ["Length", "5-7 Cm (Without Stem)"],
+            ["Skin", "Thin"],
+            ["Capsaicin", "0.4%"]
+          ]
+        },
+        {
+          key: "334",
+          name: "Sannam 334",
+          badge: "EXPORT GRADE",
+          note: "Bright red · excelente processing",
+          origin: "Guntur, Andhra Pradesh",
+          desc: "334 Sannam is a premium export-grade Indian chilli variety prized for its bright red colour, balanced heat, and excellent processing performance. Grown in Guntur, Andhra Pradesh, it is widely used in chilli powder manufacturing, spice blends, and food processing industries, making it a trusted choice for international buyers.",
+          tile: "Bright red with consistent quality.",
+          metric: "30,000 – 45,000 SHU",
+          forms: "Whole, Stemless, Crushed, Powder",
+          specs: [
+            ["Heat (SHU)", "30,000 – 45,000"],
+            ["Colour Value (ASTA)", "70-100 Max"],
+            ["Flavour", "Moderately Spicy"],
+            ["Moisture", "Less Than 10 %"],
+            ["Length", "8-10cm (Without Stem)"],
+            ["Skin", "Medium"],
+            ["Capsaicin", "0.25%"]
+          ]
+        },
+        {
+          key: "byadgi",
+          name: "Byadgi",
+          badge: "GI TAGGED",
+          note: "Deep crimson · mild heat",
+          origin: "Karnataka, India",
+          desc: "Byadgi is a premium GI-tagged Indian chilli variety renowned for its deep crimson-red colour, mild pungency, and exceptional colouring properties. Grown in Karnataka, it is widely used in chilli powder manufacturing, spice blends, and oleoresin extraction, making it one of the most preferred export varieties for the global food industry.",
+          tile: "Rich colour with mild heat.",
+          metric: "8,000 – 15,000 SHU",
+          forms: "Whole, Stemless, Crushed, Powder",
+          specs: [
+            ["Heat (SHU)", "8,000 – 15,000"],
+            ["Colour Value (ASTA)", "120-140 Max"],
+            ["Flavour", "Mild Spicy"],
+            ["Moisture", "Less Than 10 %"],
+            ["Length", "8-10 Cm (Without Stem)"],
+            ["Skin", "Wrinkled"],
+            ["Capsaicin", "0.28%"]
+          ]
+        },
+        {
+          key: "wonder-hot",
+          name: "Wonder Hot",
+          badge: "HIGH PUNGENCY",
+          note: "Intense heat · powder & sauces",
+          origin: "Andhra Pradesh, India",
+          desc: "Wonder Hot is a high-pungency Indian dry red chilli variety valued for its intense heat, vibrant red colour, and reliable export quality. Sourced from Andhra Pradesh, it is widely used in chilli powder production, spice blends, hot sauces, and food processing industries, making it an excellent choice for buyers seeking consistent heat and performance.",
+          tile: "High-pungency chilli for processing",
+          metric: "40,000 – 60,000 SHU",
+          forms: "Whole, Stemless, Crushed, Powder",
+          specs: [
+            ["Heat (SHU)", "40,000 – 60,000"],
+            ["Colour Value (ASTA)", "50-80 Max"],
+            ["Flavour", "Intensely Spicy"],
+            ["Moisture", "Less Than 10 %"],
+            ["Length", "7–9 cm (Without Stem)"],
+            ["Skin", "Thin to Medium"],
+            ["Capsaicin", "0.31%"]
+          ]
+        }
+      ]
+    },
+    turmeric: {
+      id: "turmeric",
+      theme: "turmeric",
+      reverse: false,
+      cream: false,
+      badgeClass: "badge-amber",
+      specsClass: "brown-bg",
+      dot: "#F5C60E",
+      overview: {
+        badge: "GOLDEN ROOT",
+        note: "5 export varieties available",
+        name: "Turmeric",
+        origin: "Origin: Tamil Nadu, Telangana, Maharashtra & Meghalaya",
+        desc: "Finger and Bulb grades sort by Curcumin Content and polishing finish for food and colour applications.",
+        tagline: "Pure • Potent • Naturally Golden",
+        specs: [
+          ["Curcumin Content", "2.5% – 12%"],
+          ["ASTA Colour Value", "70+ to 100+"],
+          ["Forms", "Polished / Double Polished"],
+          ["Moisture", "≤ 12% max"],
+          ["Packaging", "PP Bags / Jute / Vacuum"],
+          ["Min. Order Qty", "1 FCL (18-20 MT)"],
+          ["Certifications", "APEDA · FSSAI · Phyto"]
+        ]
+      },
+      varieties: [
+        {
+          key: "erode",
+          name: "Erode Turmeric",
+          badge: "TURMERIC CITY",
+          note: "Vibrant golden · rich aroma",
+          origin: "Origin – Erode, Tamil Nadu, India",
+          desc: "Renowned as India's \"Turmeric City\" variety, Erode Turmeric is valued for its vibrant golden-yellow colour, rich aroma, and consistent curcumin content. It is a preferred choice for global spice, pharmaceutical, food processing, and natural colouring industries.",
+          tile: "Premium golden turmeric with rich aroma and consistent curcumin.",
+          metric: "Curcumin 3.5 – 5%",
+          forms: "Polished, Double Polished",
+          specs: [
+            ["Origin", "Erode, Tamil Nadu, India"],
+            ["Curcumin Content", "3.5 – 5%"],
+            ["ASTA Colour Value", "80+"],
+            ["Moisture", "12% max"],
+            ["Finger Length", "3-6 cm"],
+            ["Aroma", "Strong & Earthy"],
+            ["Form", "Whole Fingers"],
+            ["Export Use", "Spice, Pharma, Dye"]
+          ]
+        },
+        {
+          key: "salem",
+          name: "Salem Turmeric",
+          badge: "SUPERIOR GRADE",
+          note: "Polished appearance · retail",
+          origin: "Origin – Salem, Tamil Nadu, India",
+          desc: "Renowned for polished appearance, rich golden hue, and superior quality. Preferred by international buyers for retail and food processing applications. Excellent curcumin retention with consistent finger size.",
+          tile: "Superior colour, balanced curcumin, and trusted export quality.",
+          metric: "Curcumin 3 – 4.5%",
+          forms: "Polished",
+          specs: [
+            ["Origin", "Salem, Tamil Nadu, India"],
+            ["Curcumin Content", "3 – 4.5%"],
+            ["ASTA Colour Value", "75+"],
+            ["Moisture", "12% max"],
+            ["Finger Length", "3-5 cm"],
+            ["Aroma", "Warm & Pungent"],
+            ["Form", "Whole Fingers / Bulbs"],
+            ["Export Use", "Retail, Food, Spice"]
+          ]
+        },
+        {
+          key: "nizamabad",
+          name: "Nizamabad Turmeric",
+          badge: "TELANGANA GRADE",
+          note: "Bright yellow · pleasant aroma",
+          origin: "Origin – Nizamabad, Telangana, India",
+          desc: "Nizamabad Turmeric is a premium export-grade variety appreciated for its bright yellow colour, pleasant aroma, and consistent curcumin content. Sourced from Telangana's renowned turmeric-growing region, it is widely used in food processing, pharmaceuticals, nutraceuticals, and spice manufacturing for international markets.",
+          tile: "Naturally vibrant turmeric with excellent processing performance.",
+          metric: "Curcumin 3 – 4.5%",
+          forms: "Polished, Unpolished",
+          specs: [
+            ["Origin", "Nizamabad, Telangana, India"],
+            ["Curcumin Content", "3 – 4.5%"],
+            ["ASTA Colour Value", "70+"],
+            ["Moisture", "12% max"],
+            ["Finger Length", "4-7 cm"],
+            ["Aroma", "Robust & Woody"],
+            ["Form", "Whole Fingers"],
+            ["Export Use", "Spice, Bulk, Grinding"]
+          ]
+        },
+        {
+          key: "rajapuri",
+          name: "Rajapuri (Sangli) Turmeric",
+          badge: "BULK EXPORT",
+          note: "Large fingers · commercial lead",
+          origin: "Origin – Sangli, Maharashtra, India",
+          desc: "Rajapuri (Sangli) Turmeric is India's leading commercial turmeric variety, valued for its large fingers, bright yellow colour, and consistent processing quality. It is widely exported for spice manufacturing, food processing, pharmaceutical, and nutraceutical applications worldwide.",
+          tile: "Large finger turmeric preferred for bulk exports worldwide.",
+          metric: "Curcumin 2.5 – 4%",
+          forms: "Polished",
+          specs: [
+            ["Origin", "Sangli, Maharashtra, India"],
+            ["Curcumin Content", "2.5 – 4%"],
+            ["ASTA Colour Value", "70+"],
+            ["Moisture", "12% max"],
+            ["Finger Length", "3-5 cm"],
+            ["Aroma", "Mild & Earthy"],
+            ["Form", "Whole Fingers"],
+            ["Export Use", "Food Processing, Spice"]
+          ]
+        },
+        {
+          key: "lakadong",
+          name: "Lakadong Turmeric",
+          badge: "HIGH CURCUMIN",
+          note: "7-12% Curcumin · medicinal grade",
+          origin: "Origin – Lakadong, Meghalaya, India",
+          desc: "Lakadong Turmeric is a premium high-curcumin variety from Meghalaya, renowned for its exceptional purity, rich golden colour, and superior medicinal value. Its outstanding quality makes it a preferred choice for pharmaceutical, nutraceutical, wellness, and premium food applications worldwide.",
+          tile: "High-curcumin premium turmeric with exceptional purity and potency.",
+          metric: "Curcumin 7-12%",
+          forms: "Double Polished, Premium Cleaned",
+          specs: [
+            ["Origin", "Lakadong, Meghalaya, India"],
+            ["Curcumin Content", "7-12%"],
+            ["ASTA Colour Value", "100+"],
+            ["Moisture", "10% max"],
+            ["Finger Length", "2-4 cm"],
+            ["Aroma", "Intense & Rich"],
+            ["Form", "Whole Fingers / Bulbs"],
+            ["Export Use", "Pharma, Nutraceutical, Medicinal"]
+          ]
+        }
+      ]
+    },
+    cardamom: {
+      id: "cardamom",
+      theme: "cardamom",
+      reverse: false,
+      cream: false,
+      badgeClass: "badge-teal",
+      specsClass: "green-bg",
+      dot: "#0E8268",
+      overview: {
+        badge: "AROMATIC GRADE",
+        note: "3 export varieties available",
+        name: "Cardamom",
+        origin: "Origin: Kerala & Tamil Nadu (Western Ghats)",
+        desc: "Select an export grade below to view quality parameters, capsule size, moisture, and packing options.",
+        tagline: "Aromatic • Premium • Superior",
+        specs: [
+          ["Capsule Size", "6.5 mm to > 8 mm"],
+          ["Grade", "Export / Premium Export"],
+          ["Forms", "Whole Pods, Seeds, Powder"],
+          ["Moisture", "Less than 10%"],
+          ["Packaging", "PP Bags / Vacuum"],
+          ["Min. Order Qty", "500 kg – 1 FCL"],
+          ["Certifications", "APEDA · FSSAI · Phyto"]
+        ]
+      },
+      varieties: [
+        {
+          key: "ageb",
+          name: "AGEB – Alleppey Green Extra Bold",
+          badge: "EXTRA BOLD",
+          note: "Extra-large capsules · > 8 mm",
+          origin: "Origin - Idukki, Kerala, India",
+          desc: "The finest export grade of Indian green cardamom, AGEB is distinguished by its extra-large capsules, vibrant green colour, and intense natural aroma. It is the preferred choice for premium retail, gourmet food products, and international spice markets.",
+          tile: "Extra-large premium capsules with vibrant green colour and exceptional aroma.",
+          metric: "Capsule > 8 mm",
+          forms: "Extra Bold, Premium Grade",
+          specs: [
+            ["Origin", "Idukki, Kerala, India"],
+            ["Capsule Size", "More than 8 mm"],
+            ["Grade", "Premium Export Grade"],
+            ["Colour", "Bright Natural Green"],
+            ["Moisture", "Less than 10%"],
+            ["Aroma", "Strong, Sweet & Characteristic"],
+            ["Forms Available", "Whole Pods, Seeds, Powder"]
+          ]
+        },
+        {
+          key: "agb",
+          name: "AGB – Alleppey Green Bold",
+          badge: "EXPORT BOLD",
+          note: "7-8 mm capsules · rich aroma",
+          origin: "Origin - Idukki, Kerala, India",
+          desc: "AGB features bold, uniformly graded green capsules with a rich aroma and excellent flavour. Its consistent quality and attractive appearance make it ideal for bulk exports, food processing, and spice manufacturing.",
+          tile: "Bold green capsules offering rich flavour, uniform size, and export-grade quality.",
+          metric: "Capsule 7-8 mm",
+          forms: "Bold, Export Grade",
+          specs: [
+            ["Origin", "Idukki, Kerala, India"],
+            ["Capsule Size", "7-8 mm"],
+            ["Grade", "Export Grade"],
+            ["Colour", "Bright to Deep Green"],
+            ["Moisture", "Less than 10%"],
+            ["Aroma", "Rich & Pleasant"],
+            ["Forms Available", "Whole Pods, Seeds, Powder"]
+          ]
+        },
+        {
+          key: "ags",
+          name: "AGS – Alleppey Green Superior",
+          badge: "SUPERIOR GRADE",
+          note: "6.5-7 mm · commercial export",
+          origin: "Origin - Idukki, Kerala, India",
+          desc: "AGS is a well-graded commercial export quality cardamom offering balanced size, natural green colour, and pleasant aroma. It is widely used in spice blends, beverages, and food processing industries across global markets.",
+          tile: "Well-graded green capsules with pleasant aroma and consistent commercial quality.",
+          metric: "Capsule 6.5-7 mm",
+          forms: "Superior, Commercial Grade",
+          specs: [
+            ["Origin", "Idukki, Kerala, India"],
+            ["Capsule Size", "6.5-7 mm"],
+            ["Grade", "Superior Commercial Export Grade"],
+            ["Colour", "Natural Green"],
+            ["Moisture", "Less than 10%"],
+            ["Aroma", "Pleasant & Characteristic"],
+            ["Forms Available", "Whole Pods, Seeds, Powder"]
+          ]
+        }
+      ]
+    },
+    pepper: {
+      id: "pepper",
+      theme: "pepper",
+      reverse: true,
+      cream: false,
+      badgeClass: "badge-amber",
+      specsClass: "dark-bg",
+      dot: "#FFFFFF",
+      overview: {
+        badge: "KING OF SPICES",
+        note: "4 export varieties available",
+        name: "Black pepper",
+        origin: "Origin: Kerala, Karnataka & Tamil Nadu",
+        desc: "Select an export grade below to explore berry size, piperine content, density, moisture, and packaging specifications.",
+        tagline: "Bold • Authentic • Distinctive",
+        specs: [
+          ["Piperine Content", "4.5 – 8.5%"],
+          ["Berry Size", "3.8 – 5.0 mm"],
+          ["Forms", "Whole, Cracked, Ground"],
+          ["Moisture", "Less than 12%"],
+          ["Packaging", "PP Bags / Jute / Vacuum"],
+          ["Min. Order Qty", "1 FCL (18-20 MT)"],
+          ["Certifications", "APEDA · FSSAI · Phyto"]
+        ]
+      },
+      varieties: [
+        {
+          key: "mg1",
+          name: "Malabar Garbled (MG1)",
+          badge: "COMMERCIAL EXPORT",
+          note: "Cleaned premium pepper",
+          origin: "Origin – Kerala, India",
+          desc: "Carefully cleaned and graded, Malabar Garbled offers rich flavour, natural aroma, and excellent purity. It is a trusted choice for bulk exports and food processing industries.",
+          tile: "Cleaned premium pepper with excellent flavour and reliable consistency.",
+          metric: "Berry Size 4.0–4.5 mm",
+          forms: "Whole, Cracked, Ground",
+          specs: [
+            ["Origin", "Kerala, India"],
+            ["Grade", "Commercial Export Grade"],
+            ["Berry Size", "4.0–4.5 mm"],
+            ["Piperine Content", "5.0–7.0%"],
+            ["Moisture", "Less than 12%"],
+            ["Colour", "Black"],
+            ["Forms Available", "Whole, Cracked, Ground"]
+          ]
+        },
+        {
+          key: "mug",
+          name: "Malabar Ungarbled (MUG)",
+          badge: "COMMERCIAL GRADE",
+          note: "Ideal for grinding & blends",
+          origin: "Origin – Kerala, India",
+          desc: "A commercial-grade black pepper with authentic flavour and characteristic pungency. Ideal for grinding, seasoning blends, and industrial food manufacturing.",
+          tile: "Commercial black pepper ideal for grinding and industrial applications.",
+          metric: "Berry Size 3.8-4.3 mm",
+          forms: "Whole, Cracked, Ground",
+          specs: [
+            ["Origin", "Kerala, India"],
+            ["Grade", "Commercial Grade"],
+            ["Berry Size", "3.8-4.3 mm"],
+            ["Piperine Content", "4.5-6.5%"],
+            ["Moisture", "Less than 12%"],
+            ["Colour", "Natural Black"],
+            ["Forms Available", "Whole, Cracked, Ground"]
+          ]
+        },
+        {
+          key: "tgeb",
+          name: "Tellicherry Garbled Extra Bold (TGEB)",
+          badge: "PREMIUM BOLD",
+          note: "Robust flavour · strong aroma",
+          origin: "Origin – Kerala, India",
+          desc: "A premium export-grade black pepper featuring bold, uniform berries with a robust flavour and strong aroma. Widely preferred for spice manufacturing, food processing, and retail packaging.",
+          tile: "Extra-bold berries with exceptional aroma and premium export quality.",
+          metric: "Berry Size 4.75–5.0 mm",
+          forms: "Whole, Cracked, Ground",
+          specs: [
+            ["Origin", "Kerala, India"],
+            ["Grade", "Premium Export Grade"],
+            ["Berry Size", "4.75–5.0 mm"],
+            ["Piperine Content", "6.0–8.0%"],
+            ["Moisture", "Less than 12%"],
+            ["Colour", "Black"],
+            ["Forms Available", "Whole, Cracked, Ground"]
+          ]
+        },
+        {
+          key: "tgseb",
+          name: "Tellicherry Garbled Special Extra Bold (TGSEB)",
+          badge: "FINEST GRADE",
+          note: "Largest berries · 5.0 mm",
+          origin: "Origin – Idukki, Kerala, India",
+          desc: "The finest grade of Indian black pepper, TGSEB is prized for its extra-large berries, rich aroma, and exceptional pungency. It is the preferred choice for premium food brands and gourmet markets worldwide.",
+          tile: "Largest Tellicherry grade with rich flavour and superior appearance.",
+          metric: "Berry Size 5.0 mm",
+          forms: "Whole, Cracked, Ground",
+          specs: [
+            ["Origin", "Idukki, Kerala, India"],
+            ["Grade", "Premium Export Grade"],
+            ["Berry Size", "5.0 mm"],
+            ["Piperine Content", "6.5–8.5%"],
+            ["Moisture", "Less than 12%"],
+            ["Colour", "Deep Black"],
+            ["Forms Available", "Whole, Cracked, Ground"]
+          ]
+        }
+      ]
+    }
+  };
+
+  function specsHtml(specs, dotColor) {
+    return specs.map(([k, v]) => `
+      <div class="spec-row">
+        <span class="dot" style="background:${dotColor || '#C22E1A'}"></span>
+        <span class="spec-label">${k}</span>
+        <span class="spec-val">${v}</span>
+      </div>
+    `).join("");
+  }
+
+  function usesHtml(uses) {
+    if (!uses || !uses.length) return "";
+    return `
+      <div style="margin-top:16px;">
+        <p style="font-size:11px; font-weight:700; color:var(--color-text-muted); margin-bottom:8px;">COMMON USES</p>
+        <div class="uses-pills">
+          ${uses.map((u) => `<span class="uses-tag">${u}</span>`).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDetail(spice, detail, isVariety, isPanelOpen = false) {
+    const formsBadge = detail.forms
+      ? `<p style="font-size:13px; font-weight:700; color:var(--color-brand-red); margin-top:14px;">Forms Available: <span style="color:var(--color-text-main); font-weight:500;">${detail.forms}</span></p>`
+      : "";
+
+    const toggleText = isPanelOpen
+      ? `Hide Varieties <span class="chevron">▴</span>`
+      : `View Varieties <span class="chevron">▾</span>`;
+
+    return `
+      <button class="back-overview-btn" type="button" data-action="back" ${isVariety ? "" : "style='display:none;'"}>
+        ← Back to ${spice.overview.name} overview
+      </button>
+      <div class="badge-row">
+        <span class="spec-badge red-pill">${detail.badge}</span>
+        <span class="meta-note" style="font-size:12px; color:var(--color-accent-brown); font-weight:600;">${detail.note || ""}</span>
+      </div>
+      <h3 class="spec-title">${detail.name}</h3>
+      <p class="spec-origin">${detail.origin}</p>
+      <p class="spec-desc">${detail.desc}</p>
+      ${formsBadge}
+      <button class="view-varieties-btn" type="button" data-action="toggle-varieties" aria-expanded="${isPanelOpen ? 'true' : 'false'}">
+        ${toggleText}
+      </button>
+    `;
+  }
+
+  function bindSpiceBlock(block, spice) {
+    const copyEl = block.querySelector('[data-role="copy"]');
+    const specRows = block.querySelector('[data-role="spec-rows"]');
+    const panel = block.querySelector('[data-role="variety-panel"]');
+
+    function isPanelOpen() {
+      return !!(panel && !panel.hidden && panel.classList.contains("open"));
+    }
+
+    function showOverview() {
+      block.dataset.mode = "overview";
+      block.classList.remove("is-variety");
+      if (copyEl) copyEl.innerHTML = renderDetail(spice, spice.overview, false, isPanelOpen());
+      if (specRows) specRows.innerHTML = specsHtml(spice.overview.specs, spice.dot);
+
+      block.querySelectorAll(".variety-tile").forEach((t) => {
+        t.classList.remove("active");
+      });
+    }
+
+    function showVariety(key) {
+      const varObj = spice.varieties.find((v) => v.key === key);
+      if (!varObj) return;
+      block.dataset.mode = "variety";
+      block.classList.add("is-variety");
+      if (copyEl) copyEl.innerHTML = renderDetail(spice, varObj, true, isPanelOpen());
+      if (specRows) specRows.innerHTML = specsHtml(varObj.specs, spice.dot);
+
+      block.querySelectorAll(".variety-tile").forEach((t) => {
+        t.classList.toggle("active", t.dataset.variety === key);
+      });
+    }
+
+    // Expose instance methods for global navigation router
+    block._showVariety = showVariety;
+    block._showOverview = showOverview;
+
+    // Helper for smooth scrolling and card focus animation
+    function focusCard() {
+      const specCard = block.querySelector('.spec-product-card') || block;
+      const yOffset = -130;
+      const y = specCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+
+      specCard.classList.remove('section-focus-glow');
+      void specCard.offsetWidth;
+      specCard.classList.add('section-focus-glow');
+
+      setTimeout(() => {
+        specCard.classList.remove('section-focus-glow');
+      }, 1800);
+    }
+
+    // Event Delegation on block wrapper
+    block.addEventListener("click", (e) => {
+      const toggleBtn = e.target.closest('[data-action="toggle-varieties"]');
+      if (toggleBtn) {
+        e.preventDefault();
+        const currentlyOpen = isPanelOpen();
+        if (currentlyOpen) {
+          if (panel) {
+            panel.hidden = true;
+            panel.classList.remove("open");
+          }
+          toggleBtn.setAttribute("aria-expanded", "false");
+          toggleBtn.innerHTML = `View Varieties <span class="chevron">▾</span>`;
+        } else {
+          if (panel) {
+            panel.hidden = false;
+            panel.removeAttribute("hidden");
+            panel.classList.add("open");
+          }
+          toggleBtn.setAttribute("aria-expanded", "true");
+          toggleBtn.innerHTML = `Hide Varieties <span class="chevron">▴</span>`;
+          
+          setTimeout(() => {
+            if (panel) {
+              const yOffset = -130;
+              const y = panel.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+          }, 100);
+        }
+        return;
+      }
+
+      const backBtn = e.target.closest('[data-action="back"]');
+      if (backBtn) {
+        e.preventDefault();
+        showOverview();
+        focusCard();
+        return;
+      }
+
+      const tile = e.target.closest(".variety-tile");
+      if (tile) {
+        e.preventDefault();
+        showVariety(tile.dataset.variety);
+        focusCard();
+        return;
+      }
+    });
+
+    return block;
+  }
+
+  function createSpiceBlock(spice) {
+    const block = document.createElement("div");
+    block.className = "spice-block";
+    block.id = spice.id;
+    block.dataset.theme = spice.theme;
+    block.dataset.spice = spice.id;
+    block.dataset.mode = "overview";
+
+    block.innerHTML = `
+      <div class="spec-product-card ${spice.reverse ? "reverse" : ""}">
+        <div class="spec-info-side" data-role="copy">
+          ${renderDetail(spice, spice.overview, false)}
+          <button class="view-varieties-btn" type="button" data-action="toggle-varieties" aria-expanded="false">
+            View Varieties <span class="chevron">▾</span>
+          </button>
+        </div>
+        <div class="spec-table-side ${spice.specsClass}" data-role="specs">
+          <h4>EXPORT SPECIFICATIONS</h4>
+          <div data-role="spec-rows">${specsHtml(spice.overview.specs, spice.dot)}</div>
+        </div>
+      </div>
+
+      <div class="variety-panel" data-role="variety-panel" hidden>
+        <div class="variety-panel-head">
+          <h3>${spice.overview.name} Varieties</h3>
+          <span>${spice.varieties.length} export grades</span>
+        </div>
+        <div class="variety-grid" data-role="variety-grid">
+          ${spice.varieties.map((v) => `
+            <button class="variety-tile" type="button" data-variety="${v.key}">
+              <h4>${v.name}</h4>
+              <p>${v.tile}</p>
+              <div class="metric">${v.metric}</div>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    bindSpiceBlock(block, spice);
+    return block;
+  }
+
+  Object.values(catalog).forEach((spice) => {
+    let existingBlock = document.getElementById(spice.id);
+    if (existingBlock) {
+      bindSpiceBlock(existingBlock, spice);
+    } else {
+      catalogRoot.appendChild(createSpiceBlock(spice));
+    }
+  });
+}
+
+// Toast Notification
+function showToast(message) {
+  let toastBox = document.getElementById('toastNotification');
+  if (!toastBox) {
+    toastBox = document.createElement('div');
+    toastBox.id = 'toastNotification';
+    toastBox.className = 'toast-box';
+    document.body.appendChild(toastBox);
+  }
+
+  toastBox.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#38A76E;"></i> <span>${escapeHTML(message)}</span>`;
+  toastBox.classList.add('show');
+
+  setTimeout(() => {
+    toastBox.classList.remove('show');
+  }, 4000);
+}
+
+// Global Keyboard Accessibility (Escape Key Handler)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modalOverlay = document.getElementById('quoteModal');
+    if (modalOverlay && modalOverlay.classList.contains('active')) {
+      modalOverlay.classList.remove('active');
+    }
+
+    const drawer = document.getElementById('mobileNavDrawer');
+    const overlay = document.getElementById('mobileDrawerOverlay');
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    if (drawer && drawer.classList.contains('active')) {
+      drawer.classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
+      if (menuBtn) menuBtn.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    const widget = document.getElementById('floatingContactWidget');
+    const fabBtn = document.getElementById('floatingFabBtn');
+    if (widget && widget.classList.contains('active')) {
+      widget.classList.remove('active');
+      if (fabBtn) fabBtn.classList.remove('active');
+    }
+  }
+});
+
+// Floating Contact Widget Controller
+function initFloatingContactWidget() {
+  const widget = document.getElementById('floatingContactWidget');
+  const fabBtn = document.getElementById('floatingFabBtn');
+
+  if (!widget || !fabBtn) return;
+
+  fabBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    widget.classList.toggle('active');
+    fabBtn.classList.toggle('active');
+  });
+
+  // Close floating menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (widget.classList.contains('active') && !widget.contains(e.target)) {
+      widget.classList.remove('active');
+      fabBtn.classList.remove('active');
+    }
+  });
+}
+
+// Back to Top Button Controller (Triggered only when scroll >= 50%)
+function initBackToTopButton() {
+  const backToTopBtn = document.getElementById('backToTopBtn');
+  if (!backToTopBtn) return;
+
+  const handleScroll = () => {
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollHeight > 0) {
+      const scrollPercentage = (window.scrollY / scrollHeight) * 100;
+      if (scrollPercentage >= 50) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll(); // Initial check
+
+  backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// Scroll Reveal & Intersection Observer for Ultra-Premium Smooth Transitions
+function initScrollReveal() {
+  const revealElements = document.querySelectorAll('.product-card, .cert-gold-card, .spec-product-card, .process-card, .incoterm-card, .cert-card-item, .why-choose-us, .about-story-section');
+  revealElements.forEach(el => el.classList.add('reveal-element'));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  revealElements.forEach(el => observer.observe(el));
+
+  // Also trigger reveal check on active view switch
+  window.triggerScrollRevealCheck = () => {
+    setTimeout(() => {
+      revealElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom >= 0) {
+          el.classList.add('revealed');
+        }
+      });
+    }, 100);
+  };
+}
+
+// B2B FAQ Accordion Controller (Accessible & Auto-Collapse)
+function initFaqAccordion() {
+  const faqItems = document.querySelectorAll('.faq-item');
+  if (!faqItems.length) return;
+
+  faqItems.forEach(item => {
+    const questionBtn = item.querySelector('.faq-question');
+    if (!questionBtn) return;
+
+    questionBtn.addEventListener('click', () => {
+      const isActive = item.classList.contains('active');
+
+      // Collapse all other FAQ items for clean UX
+      faqItems.forEach(otherItem => {
+        if (otherItem !== item) {
+          otherItem.classList.remove('active');
+          const otherBtn = otherItem.querySelector('.faq-question');
+          if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Toggle clicked FAQ item
+      if (isActive) {
+        item.classList.remove('active');
+        questionBtn.setAttribute('aria-expanded', 'false');
+      } else {
+        item.classList.add('active');
+        questionBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+}
+
+// Mobile Navigation Drawer Controller
+function initMobileMenu() {
+  const menuBtn = document.getElementById('mobileMenuBtn');
+  const closeBtn = document.getElementById('mobileDrawerCloseBtn');
+  const overlay = document.getElementById('mobileDrawerOverlay');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+
+  if (!menuBtn || !drawer || !overlay) return;
+
+  function openDrawer() {
+    drawer.classList.add('active');
+    overlay.classList.add('active');
+    menuBtn.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+    menuBtn.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  menuBtn.addEventListener('click', () => {
+    if (drawer.classList.contains('active')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  mobileNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const targetView = item.getAttribute('data-view');
+      if (targetView) {
+        window.location.hash = targetView;
+      }
+      closeDrawer();
+    });
+  });
+}
