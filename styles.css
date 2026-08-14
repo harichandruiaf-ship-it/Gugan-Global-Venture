@@ -211,6 +211,10 @@ button {
   text-decoration: none;
 }
 
+.top-bar-mobile-extra {
+  display: none;
+}
+
 .top-bar-item i {
   font-size: 14px;
   opacity: 0.8;
@@ -3500,16 +3504,41 @@ button {
 
 /* Breakpoint 768px Mobile Rules */
 @media (max-width: 768px) {
-  /* Header & Navigation */
+  /* Header & Navigation Assembly */
+  .top-bar {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+  }
   .top-bar-right {
-    display: none;
+    display: none !important;
   }
   .top-bar-left {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-    font-size: 11px !important;
-    padding: 4px 10px;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    gap: 32px !important;
+    padding-left: 100% !important;
+    animation: topBarMarquee 15s linear infinite !important;
+    will-change: transform;
+  }
+  .top-bar:hover .top-bar-left,
+  .top-bar:active .top-bar-left {
+    animation-play-state: paused !important;
+  }
+  .top-bar-mobile-extra {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .navbar {
+    height: 60px !important;
+    padding: 0 4% !important;
   }
   .hamburger-btn {
     display: inline-flex;
@@ -3518,7 +3547,11 @@ button {
     display: none;
   }
   .brand-logo {
-    height: 32px !important;
+    height: 34px !important;
+  }
+  .brand-wordmark {
+    height: 26px !important;
+    max-width: 130px !important;
   }
   .brand-title {
     font-size: 16px !important;
@@ -3527,20 +3560,36 @@ button {
     font-size: 9.5px !important;
   }
   .btn-cta-quote {
-    padding: 8px 12px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
     font-size: 11.5px !important;
     border-radius: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
   }
 
-  /* Page View Containers */
+  /* Page View Containers (Header height: 34px top-bar + 60px navbar = 94px) */
   .page-view {
-    padding-top: 98px !important;
+    padding-top: 94px !important;
   }
+  .filter-bar {
+    top: 94px !important;
+  }
+
+@keyframes topBarMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
 
   /* Hero Section Typography & Buttons */
   .hero-section {
-    min-height: 340px !important;
-    padding: 36px 5% !important;
+    min-height: 360px !important;
+    padding: 28px 5% 36px 5% !important;
+    margin-top: 0 !important;
     background-position: center !important;
   }
   .hero-h1 {
@@ -3869,14 +3918,7 @@ button {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
   }
-  /* Header Brand & Logos */
-  .brand-logo {
-    height: 38px !important;
-  }
-  .brand-wordmark {
-    height: 28px !important;
-    max-width: 140px !important;
-  }
+  /* Footer Brand & Logos */
   .footer-brand-wordmark {
     height: 48px !important;
   }
@@ -4036,10 +4078,10 @@ button {
 /* Breakpoint 480px Small Mobile Phones */
 @media (max-width: 480px) {
   .page-view {
-    padding-top: 60px !important;
+    padding-top: 94px !important;
   }
   .filter-bar {
-    top: 60px !important;
+    top: 94px !important;
   }
   .brand-logo {
     height: 32px !important;
