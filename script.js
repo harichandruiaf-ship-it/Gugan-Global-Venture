@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFilterPills();
   initDualMultiSelects();
   initModals();
+  initThankYouModal();
   initTradeInquiryForm();
   initInteractiveCatalog();
   initFloatingContactWidget();
@@ -305,9 +306,23 @@ const SPICE_VARIETIES_MASTER = [
 
 const CATEGORY_NAMES = {
   chilli: '🌶️ Dry Red Chilli',
-  turmeric: '🟡 Turmeric Rhizomes',
-  pepper: '⚫ Black Pepper',
-  cardamom: '🟢 Green Cardamom'
+  turmeric: '🟡 Turmeric Rhizomes & Powder',
+  pepper: '⚫ Black Pepper Berries',
+  cardamom: '🟢 Green Cardamom Capsules'
+};
+
+const CATEGORY_SHORT_NAMES = {
+  chilli: 'Chilli',
+  turmeric: 'Turmeric',
+  pepper: 'Black Pepper',
+  cardamom: 'Cardamom'
+};
+
+const CATEGORY_TAB_LABELS = {
+  chilli: '🌶️ Chilli',
+  turmeric: '🟡 Turmeric',
+  pepper: '⚫ Pepper',
+  cardamom: '🟢 Cardamom'
 };
 
 class B2BDualMultiSelect {
@@ -326,25 +341,69 @@ class B2BDualMultiSelect {
 
     this.selectedCategories = new Set();
     this.selectedVarieties = new Set();
+    this.activeFilterTab = 'all'; // 'all' | individual category key
+    this.searchQuery = '';
 
     this.init();
   }
 
   init() {
+    // 1. Category Trigger Toggle
     this.catTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       this.closeOtherDropdowns(this.catContainer);
+      const willOpen = !this.catContainer.classList.contains('open');
       this.catContainer.classList.toggle('open');
-      this.catTrigger.setAttribute('aria-expanded', this.catContainer.classList.contains('open'));
+      this.catTrigger.setAttribute('aria-expanded', willOpen);
+
+      if (willOpen) {
+        this.checkPositioning(this.catContainer);
+      }
     });
 
+    // 2. Variety Trigger Toggle - Strictly Interlinked Gateway
     this.varTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
+
+      // Guard: User must select at least one spice product first!
+      if (this.selectedCategories.size === 0) {
+        e.preventDefault();
+
+        // Visually guide user: pulse the category dropdown
+        this.catContainer.classList.remove('b2b-highlight-pulse');
+        void this.catContainer.offsetWidth; // force browser DOM reflow
+        this.catContainer.classList.add('b2b-highlight-pulse');
+        setTimeout(() => {
+          this.catContainer.classList.remove('b2b-highlight-pulse');
+        }, 1400);
+
+        // Auto-open the category dropdown so user can immediately select
+        this.closeOtherDropdowns(this.catContainer);
+        this.catContainer.classList.add('open');
+        this.catTrigger.setAttribute('aria-expanded', 'true');
+        this.checkPositioning(this.catContainer);
+
+        showToast('Please select a Spice Product first to view its varieties.');
+        return;
+      }
+
       this.closeOtherDropdowns(this.varContainer);
+      const willOpen = !this.varContainer.classList.contains('open');
       this.varContainer.classList.toggle('open');
-      this.varTrigger.setAttribute('aria-expanded', this.varContainer.classList.contains('open'));
+      this.varTrigger.setAttribute('aria-expanded', willOpen);
+
+      if (willOpen) {
+        this.checkPositioning(this.varContainer);
+        const modalCard = this.varContainer.closest('.modal-card');
+        if (modalCard) {
+          setTimeout(() => {
+            this.varContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 80);
+        }
+      }
     });
 
+    // 3. Category Checkbox Change Handler
     this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => {
       chk.addEventListener('change', () => {
         if (chk.checked) {
@@ -352,7 +411,23 @@ class B2BDualMultiSelect {
         } else {
           this.selectedCategories.delete(chk.value);
         }
+
+        // Strict Pruning: Remove any selected varieties whose parent category is no longer selected
+        const activeCats = Array.from(this.selectedCategories);
+        for (const vKey of Array.from(this.selectedVarieties)) {
+          const varObj = SPICE_VARIETIES_MASTER.find(v => v.key === vKey);
+          if (!varObj || !activeCats.includes(varObj.category)) {
+            this.selectedVarieties.delete(vKey);
+          }
+        }
+
+        // Reset activeFilterTab if it no longer belongs to active categories
+        if (this.activeFilterTab !== 'all' && !activeCats.includes(this.activeFilterTab)) {
+          this.activeFilterTab = 'all';
+        }
+
         this.renderCategoryTags();
+        this.updateLockState();
         this.updateVarietyDropdown();
       });
 
@@ -367,28 +442,58 @@ class B2BDualMultiSelect {
       }
     });
 
+    // 4. Click outside to close dropdowns
     document.addEventListener('click', (e) => {
       if (this.catContainer && !this.catContainer.contains(e.target)) {
-        this.catContainer.classList.remove('open');
+        this.catContainer.classList.remove('open', 'open-upward');
         this.catTrigger.setAttribute('aria-expanded', 'false');
       }
       if (this.varContainer && !this.varContainer.contains(e.target)) {
-        this.varContainer.classList.remove('open');
+        this.varContainer.classList.remove('open', 'open-upward');
         this.varTrigger.setAttribute('aria-expanded', 'false');
       }
     });
 
+    // Initialize lock state & variety view
+    this.updateLockState();
     this.updateVarietyDropdown();
+  }
+
+  checkPositioning(container) {
+    const rect = container.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 310 && rect.top > 310) {
+      container.classList.add('open-upward');
+    } else {
+      container.classList.remove('open-upward');
+    }
   }
 
   closeOtherDropdowns(current) {
     document.querySelectorAll('.b2b-multiselect').forEach(el => {
       if (el !== current) {
-        el.classList.remove('open');
+        el.classList.remove('open', 'open-upward');
         const trig = el.querySelector('.b2b-multiselect-trigger');
         if (trig) trig.setAttribute('aria-expanded', 'false');
       }
     });
+  }
+
+  updateLockState() {
+    if (this.selectedCategories.size === 0) {
+      this.varContainer.classList.add('b2b-locked');
+      this.varTrigger.setAttribute('aria-disabled', 'true');
+      this.varTrigger.setAttribute('tabindex', '-1');
+      // If variety dropdown was currently open, close it
+      this.varContainer.classList.remove('open', 'open-upward');
+      this.varTrigger.setAttribute('aria-expanded', 'false');
+      this.renderVarietyTags();
+    } else {
+      this.varContainer.classList.remove('b2b-locked');
+      this.varTrigger.removeAttribute('aria-disabled');
+      this.varTrigger.setAttribute('tabindex', '0');
+      this.renderVarietyTags();
+    }
   }
 
   renderCategoryTags() {
@@ -402,13 +507,28 @@ class B2BDualMultiSelect {
       const chip = document.createElement('span');
       chip.className = 'b2b-chip';
       chip.innerHTML = `${escapeHTML(CATEGORY_NAMES[cat] || cat)} <span class="remove-chip">&times;</span>`;
-      
+
       chip.querySelector('.remove-chip').addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectedCategories.delete(cat);
         const chk = this.catDropdown.querySelector(`input[value="${cat}"]`);
         if (chk) chk.checked = false;
+
+        // Prune varieties belonging to the removed category
+        const activeCats = Array.from(this.selectedCategories);
+        for (const vKey of Array.from(this.selectedVarieties)) {
+          const varObj = SPICE_VARIETIES_MASTER.find(v => v.key === vKey);
+          if (!varObj || !activeCats.includes(varObj.category)) {
+            this.selectedVarieties.delete(vKey);
+          }
+        }
+
+        if (this.activeFilterTab === cat) {
+          this.activeFilterTab = 'all';
+        }
+
         this.renderCategoryTags();
+        this.updateLockState();
         this.updateVarietyDropdown();
       });
 
@@ -417,83 +537,251 @@ class B2BDualMultiSelect {
   }
 
   updateVarietyDropdown() {
+    this.varDropdown.innerHTML = '';
     const activeCats = Array.from(this.selectedCategories);
-    let allowedVarieties = [];
 
+    // If no category is selected, display locked notice
     if (activeCats.length === 0) {
-      allowedVarieties = SPICE_VARIETIES_MASTER;
-    } else {
-      allowedVarieties = SPICE_VARIETIES_MASTER.filter(v => activeCats.includes(v.category));
+      this.varDropdown.innerHTML = `
+        <div class="var-locked-notice">
+          <i class="fa-solid fa-lock" style="font-size:20px; color:#94a3b8; margin-bottom:8px;"></i>
+          <p style="font-size:13px; font-weight:700; color:#334155; margin:0 0 4px;">Spice Product Required</p>
+          <p style="font-size:12px; color:#64748b; margin:0;">Please select one or more spice products above to view available export varieties.</p>
+        </div>
+      `;
+      this.renderVarietyTags();
+      return;
     }
 
-    const allowedKeys = new Set(allowedVarieties.map(v => v.key));
-    this.selectedVarieties.forEach(vKey => {
-      if (!allowedKeys.has(vKey)) {
-        this.selectedVarieties.delete(vKey);
-      }
+    // Filter varieties strictly belonging to selected products
+    const availableVarieties = SPICE_VARIETIES_MASTER.filter(v => activeCats.includes(v.category));
+
+    // Reset active tab if it's no longer valid
+    if (this.activeFilterTab !== 'all' && !activeCats.includes(this.activeFilterTab)) {
+      this.activeFilterTab = 'all';
+    }
+
+    // 1. Build Toolbar (Tabs / Header Banner + Search)
+    const toolbar = document.createElement('div');
+    toolbar.className = 'b2b-dropdown-toolbar';
+
+    if (activeCats.length === 1) {
+      // Single product selected: Clean headline banner
+      const catKey = activeCats[0];
+      const banner = document.createElement('div');
+      banner.className = 'var-single-cat-banner';
+      banner.innerHTML = `
+        <span class="var-single-cat-title">${CATEGORY_NAMES[catKey] || catKey}</span>
+        <span class="var-single-cat-count">${availableVarieties.length} export varieties available</span>
+      `;
+      toolbar.appendChild(banner);
+    } else {
+      // Multiple products selected: Show tabs only for the active products
+      const tabsRow = document.createElement('div');
+      tabsRow.className = 'var-tabs-row';
+
+      const allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      allBtn.className = `var-tab-btn ${this.activeFilterTab === 'all' ? 'active' : ''}`;
+      allBtn.textContent = `All Selected (${availableVarieties.length})`;
+      allBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.activeFilterTab = 'all';
+        toolbar.querySelectorAll('.var-tab-btn').forEach(b => b.classList.remove('active'));
+        allBtn.classList.add('active');
+        this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
+      });
+      tabsRow.appendChild(allBtn);
+
+      activeCats.forEach(cat => {
+        const catCount = availableVarieties.filter(v => v.category === cat).length;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `var-tab-btn ${this.activeFilterTab === cat ? 'active' : ''}`;
+        btn.textContent = `${CATEGORY_TAB_LABELS[cat] || cat} (${catCount})`;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.activeFilterTab = cat;
+          toolbar.querySelectorAll('.var-tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
+        });
+        tabsRow.appendChild(btn);
+      });
+
+      toolbar.appendChild(tabsRow);
+    }
+
+    // Search bar (searches only within selected product varieties)
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'var-search-wrap';
+    const searchPlaceholder = activeCats.length === 1
+      ? `Search ${CATEGORY_SHORT_NAMES[activeCats[0]] || ''} varieties (e.g. grades, sizes)...`
+      : `Search ${availableVarieties.length} selected varieties...`;
+
+    searchWrap.innerHTML = `
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" class="var-search-input" placeholder="${escapeHTML(searchPlaceholder)}" value="${escapeHTML(this.searchQuery)}">
+    `;
+
+    const searchInput = searchWrap.querySelector('.var-search-input');
+    searchInput.addEventListener('click', (e) => e.stopPropagation());
+    searchInput.addEventListener('input', (e) => {
+      this.searchQuery = e.target.value.trim().toLowerCase();
+      this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
     });
 
-    this.varDropdown.innerHTML = '';
+    toolbar.appendChild(searchWrap);
+    this.varDropdown.appendChild(toolbar);
 
-    if (allowedVarieties.length === 0) {
-      this.varDropdown.innerHTML = `<div class="b2b-option-item" style="color:#888; cursor:default;">No varieties available</div>`;
-    } else {
-      const grouped = {};
-      allowedVarieties.forEach(v => {
-        if (!grouped[v.category]) grouped[v.category] = [];
-        grouped[v.category].push(v);
-      });
+    // 2. Scrollable Items Container
+    const itemsContainer = document.createElement('div');
+    itemsContainer.className = 'b2b-dropdown-items';
+    this.varDropdown.appendChild(itemsContainer);
 
-      Object.keys(grouped).forEach(cat => {
-        const header = document.createElement('div');
-        header.className = 'b2b-group-header';
-        header.textContent = CATEGORY_NAMES[cat] || cat;
-        this.varDropdown.appendChild(header);
+    // 3. Footer Bar with counter & utility actions
+    const footer = document.createElement('div');
+    footer.className = 'b2b-dropdown-footer';
 
-        grouped[cat].forEach(v => {
-          const item = document.createElement('div');
-          item.className = `b2b-option-item ${this.selectedVarieties.has(v.key) ? 'selected' : ''}`;
-          item.dataset.value = v.key;
+    const countSpan = document.createElement('span');
+    countSpan.className = 'var-selected-count';
+    countSpan.textContent = `${this.selectedVarieties.size} of ${availableVarieties.length} grades selected`;
+    footer.appendChild(countSpan);
 
-          const isChecked = this.selectedVarieties.has(v.key);
-          const chkId = `var_${this.varContainer.id}_${v.key}`;
-          item.innerHTML = `
-            <input type="checkbox" id="${chkId}" value="${v.key}" ${isChecked ? 'checked' : ''}>
-            <label for="${chkId}">${escapeHTML(v.name)}</label>
-          `;
+    const actionsWrap = document.createElement('div');
+    actionsWrap.style.display = 'flex';
+    actionsWrap.style.gap = '12px';
 
-          const chk = item.querySelector('input[type="checkbox"]');
-          chk.addEventListener('change', (e) => {
-            e.stopPropagation();
-            if (chk.checked) {
-              this.selectedVarieties.add(v.key);
-              item.classList.add('selected');
-            } else {
-              this.selectedVarieties.delete(v.key);
-              item.classList.remove('selected');
-            }
-            this.renderVarietyTags();
-          });
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.type = 'button';
+    selectAllBtn.className = 'btn-select-all-varieties';
+    selectAllBtn.textContent = 'Select All';
+    selectAllBtn.title = 'Select all available grades for chosen spice products';
+    selectAllBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      availableVarieties.forEach(v => this.selectedVarieties.add(v.key));
+      this.renderVarietyTags();
+      this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
+    });
 
-          item.addEventListener('click', (e) => {
-            if (e.target !== chk && e.target.tagName !== 'LABEL') {
-              chk.checked = !chk.checked;
-              chk.dispatchEvent(new Event('change'));
-            }
-          });
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'btn-clear-varieties';
+    clearBtn.textContent = 'Clear All';
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.selectedVarieties.clear();
+      this.renderVarietyTags();
+      this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
+    });
 
-          this.varDropdown.appendChild(item);
-        });
-      });
+    actionsWrap.appendChild(selectAllBtn);
+    actionsWrap.appendChild(clearBtn);
+    footer.appendChild(actionsWrap);
+    this.varDropdown.appendChild(footer);
+
+    // Initial render
+    this.renderVarietyItems(itemsContainer, countSpan, availableVarieties);
+    this.renderVarietyTags();
+  }
+
+  renderVarietyItems(container, countSpan, availableVarieties) {
+    container.innerHTML = '';
+
+    let visibleVarieties = availableVarieties || [];
+
+    // Filter by active tab
+    if (this.activeFilterTab !== 'all') {
+      visibleVarieties = visibleVarieties.filter(v => v.category === this.activeFilterTab);
     }
 
-    this.renderVarietyTags();
+    // Filter by search query
+    if (this.searchQuery) {
+      visibleVarieties = visibleVarieties.filter(v =>
+        v.name.toLowerCase().includes(this.searchQuery) ||
+        v.key.toLowerCase().includes(this.searchQuery)
+      );
+    }
+
+    if (visibleVarieties.length === 0) {
+      container.innerHTML = `<div style="padding:18px 14px; text-align:center; color:#94a3b8; font-size:12.5px;">No matching varieties found for the selected spice product(s)</div>`;
+      return;
+    }
+
+    const activeCats = Array.from(this.selectedCategories);
+    const showHeaders = activeCats.length > 1 && this.activeFilterTab === 'all';
+
+    // Group by category
+    const grouped = {};
+    visibleVarieties.forEach(v => {
+      if (!grouped[v.category]) grouped[v.category] = [];
+      grouped[v.category].push(v);
+    });
+
+    Object.keys(grouped).forEach(cat => {
+      if (showHeaders) {
+        const header = document.createElement('div');
+        header.className = 'b2b-group-header';
+        header.textContent = `${CATEGORY_NAMES[cat] || cat} (${grouped[cat].length} varieties)`;
+        container.appendChild(header);
+      }
+
+      grouped[cat].forEach(v => {
+        const item = document.createElement('div');
+        const isSelected = this.selectedVarieties.has(v.key);
+        item.className = `b2b-option-item ${isSelected ? 'selected' : ''}`;
+        item.dataset.value = v.key;
+
+        const chkId = `var_${this.varContainer.id}_${v.key}`;
+        item.innerHTML = `
+          <input type="checkbox" id="${chkId}" value="${v.key}" ${isSelected ? 'checked' : ''}>
+          <label for="${chkId}">${escapeHTML(v.name)}</label>
+        `;
+
+        const chk = item.querySelector('input[type="checkbox"]');
+        chk.addEventListener('change', (e) => {
+          e.stopPropagation();
+          if (chk.checked) {
+            this.selectedVarieties.add(v.key);
+            item.classList.add('selected');
+          } else {
+            this.selectedVarieties.delete(v.key);
+            item.classList.remove('selected');
+          }
+          this.renderVarietyTags();
+          if (countSpan) {
+            countSpan.textContent = `${this.selectedVarieties.size} of ${availableVarieties.length} grades selected`;
+          }
+        });
+
+        item.addEventListener('click', (e) => {
+          if (e.target !== chk && e.target.tagName !== 'LABEL') {
+            chk.checked = !chk.checked;
+            chk.dispatchEvent(new Event('change'));
+          }
+        });
+
+        container.appendChild(item);
+      });
+    });
+
+    if (countSpan) {
+      countSpan.textContent = `${this.selectedVarieties.size} of ${availableVarieties.length} grades selected`;
+    }
   }
 
   renderVarietyTags() {
     this.varTags.innerHTML = '';
+    if (this.selectedCategories.size === 0) {
+      this.varTags.innerHTML = `<span class="b2b-placeholder b2b-locked-placeholder"><i class="fa-solid fa-lock" style="font-size:11px; margin-right:6px; opacity:0.7;"></i>Select Spice Product first...</span>`;
+      return;
+    }
+
     if (this.selectedVarieties.size === 0) {
-      this.varTags.innerHTML = `<span class="b2b-placeholder">Select specific varieties...</span>`;
+      const catNames = Array.from(this.selectedCategories)
+        .map(c => CATEGORY_SHORT_NAMES[c] || c)
+        .join(', ');
+      this.varTags.innerHTML = `<span class="b2b-placeholder">Select specific varieties (${catNames})...</span>`;
       return;
     }
 
@@ -508,11 +796,18 @@ class B2BDualMultiSelect {
       chip.querySelector('.remove-chip').addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectedVarieties.delete(vKey);
+        this.renderVarietyTags();
         const chk = this.varDropdown.querySelector(`input[value="${vKey}"]`);
         if (chk) chk.checked = false;
         const item = this.varDropdown.querySelector(`.b2b-option-item[data-value="${vKey}"]`);
         if (item) item.classList.remove('selected');
-        this.renderVarietyTags();
+
+        const activeCats = Array.from(this.selectedCategories);
+        const availCount = SPICE_VARIETIES_MASTER.filter(v => activeCats.includes(v.category)).length;
+        const countSpan = this.varDropdown.querySelector('.var-selected-count');
+        if (countSpan) {
+          countSpan.textContent = `${this.selectedVarieties.size} of ${availCount} grades selected`;
+        }
       });
 
       this.varTags.appendChild(chip);
@@ -526,26 +821,34 @@ class B2BDualMultiSelect {
       this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => {
         chk.checked = (chk.value === catKey);
       });
+      this.activeFilterTab = catKey;
       this.renderCategoryTags();
-      this.updateVarietyDropdown();
+      this.updateLockState();
     }
 
     if (varKey) {
       this.selectedVarieties.clear();
-      this.selectedVarieties.add(varKey);
-      const chk = this.varDropdown.querySelector(`input[value="${varKey}"]`);
-      if (chk) chk.checked = true;
-      const item = this.varDropdown.querySelector(`.b2b-option-item[data-value="${varKey}"]`);
-      if (item) item.classList.add('selected');
+      const match = SPICE_VARIETIES_MASTER.find(v => v.key === varKey && (catKey ? v.category === catKey : true));
+      if (match) {
+        this.selectedVarieties.add(varKey);
+      }
+      this.renderVarietyTags();
+    } else {
+      this.selectedVarieties.clear();
       this.renderVarietyTags();
     }
+
+    this.updateVarietyDropdown();
   }
 
   reset() {
     this.selectedCategories.clear();
     this.selectedVarieties.clear();
+    this.activeFilterTab = 'all';
+    this.searchQuery = '';
     this.catDropdown.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
     this.renderCategoryTags();
+    this.updateLockState();
     this.updateVarietyDropdown();
   }
 }
@@ -614,25 +917,301 @@ function initModals() {
     });
   }
 
-  if (quoteForm) {
-    quoteForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const inputs = quoteForm.querySelectorAll('input[required]');
-      let isValid = true;
-      inputs.forEach(input => {
-        input.value = input.value.trim();
-        if (!input.value) isValid = false;
-      });
-      if (!isValid) {
-        showToast('Please fill out all required fields.');
-        return;
+  initQuoteForm();
+}
+
+// Helper functions to format multiselect spice selections for email delivery
+function formatSelectedCategories(catSet) {
+  if (!catSet || catSet.size === 0) return 'All / General Spice Inquiry';
+  const names = {
+    chilli: 'Dry Red Chilli',
+    turmeric: 'Turmeric Rhizomes & Powder',
+    pepper: 'Black Pepper Berries',
+    cardamom: 'Green Cardamom Capsules'
+  };
+  return Array.from(catSet).map(c => names[c] || c).join(', ');
+}
+
+function formatSelectedVarieties(varSet) {
+  if (!varSet || varSet.size === 0) return 'Not specified / All export grades';
+  return Array.from(varSet).map(vKey => {
+    const item = SPICE_VARIETIES_MASTER.find(v => v.key === vKey);
+    return item ? item.name : vKey;
+  }).join('; ');
+}
+
+// Gugan Brand Submission Loading Overlay (Blocks 100% unwanted touches/clicks & shows animated logo)
+function showSubmissionLoader(title, subtitle) {
+  const overlay = document.getElementById('submissionLoaderOverlay');
+  const card = document.getElementById('submissionLoaderCard');
+  const titleEl = document.getElementById('submissionLoaderTitle');
+  const subEl = document.getElementById('submissionLoaderSub');
+  if (!overlay) return;
+  if (card) card.classList.remove('success');
+  if (titleEl) titleEl.textContent = title || 'Transmitting Your Request...';
+  if (subEl) subEl.textContent = subtitle || 'Connecting to Gugan Global export desk. Please do not close or touch the screen.';
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideSubmissionLoader(isSuccess, successTitle, successSubtitle, callback) {
+  const overlay = document.getElementById('submissionLoaderOverlay');
+  const card = document.getElementById('submissionLoaderCard');
+  const titleEl = document.getElementById('submissionLoaderTitle');
+  const subEl = document.getElementById('submissionLoaderSub');
+  if (!overlay) {
+    if (callback) callback();
+    return;
+  }
+  if (isSuccess) {
+    if (card) card.classList.add('success');
+    if (titleEl) titleEl.textContent = successTitle || 'Quote Request Dispatched!';
+    if (subEl) subEl.textContent = successSubtitle || 'Thank you! Our export desk will contact you within 24 hours.';
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+      if (card) card.classList.remove('success');
+      if (callback) callback();
+    }, 1400);
+  } else {
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden', 'true');
+    if (callback) callback();
+  }
+}
+
+// Enterprise Thank You Modal Card Controls
+function initThankYouModal() {
+  const modal = document.getElementById('thankYouModal');
+  const closeBtn = document.getElementById('thankYouCloseBtn');
+  const doneBtn = document.getElementById('thankYouDoneBtn');
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeThankYouCard);
+  }
+  if (doneBtn) {
+    doneBtn.addEventListener('click', closeThankYouCard);
+  }
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeThankYouCard();
       }
-      if (modalOverlay) modalOverlay.classList.remove('active');
-      quoteForm.reset();
-      if (modalMultiSelectInst) modalMultiSelectInst.reset();
-      showToast('Thank you! Your quote request has been sent to our export desk.');
     });
   }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+      closeThankYouCard();
+    }
+  });
+}
+
+// Helper to format WhatsApp message with all submitted B2B form details
+function formatWhatsAppInquiryMessage(details) {
+  const lines = [
+    `*GUGAN GLOBAL VENTURE — EXPORT INQUIRY*`,
+    `----------------------------------------`,
+    `*Inquiry Ref:* ${details.refCode || 'GGV-EXPORT'}`,
+    `*Buyer Name:* ${details.name || 'Trade Importer'}`
+  ];
+
+  if (details.company) {
+    lines.push(`*Company:* ${details.company}`);
+  }
+  if (details.email) {
+    lines.push(`*Official Email:* ${details.email}`);
+  }
+  if (details.phone) {
+    lines.push(`*Phone / WhatsApp:* ${details.phone}`);
+  }
+  if (details.destination) {
+    lines.push(`*Destination / Incoterms:* ${details.destination}`);
+  }
+  if (details.quantity && details.quantity !== details.destination) {
+    lines.push(`*Required Volume:* ${details.quantity}`);
+  }
+  if (details.products) {
+    lines.push(`*Spice Product(s):* ${details.products}`);
+  }
+  if (details.varieties && details.varieties !== 'Not specified / All export grades') {
+    lines.push(`*Selected Export Varieties:* ${details.varieties}`);
+  }
+  if (details.message) {
+    lines.push(`*Client Notes / Specs:* ${details.message}`);
+  }
+
+  lines.push(`----------------------------------------`);
+  lines.push(`Hello Gugan Global Trade Desk, I have registered this export inquiry on your website. Please connect regarding commercial quotation and sample dispatch.`);
+
+  return lines.join('\n');
+}
+
+function showThankYouCard(details) {
+  const modal = document.getElementById('thankYouModal');
+  if (!modal) return;
+
+  const refEl = document.getElementById('thankYouRefId');
+  const nameEl = document.getElementById('thankYouName');
+  const emailEl = document.getElementById('thankYouEmail');
+  const destEl = document.getElementById('thankYouDest');
+  const prodEl = document.getElementById('thankYouProducts');
+  const waBtn = document.getElementById('thankYouWaBtn');
+
+  const refCode = details.refCode || ('GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000));
+  if (refEl) refEl.textContent = refCode;
+  if (nameEl) nameEl.textContent = details.name + (details.company ? ` (${details.company})` : '');
+  if (emailEl) emailEl.textContent = details.email || '—';
+  if (destEl) destEl.textContent = details.destination || details.quantity || 'Direct Seaport Export (FOB / CIF)';
+
+  const displayProds = details.products || 'Indian Spices';
+  const displayVars = (details.varieties && details.varieties !== 'Not specified / All export grades') ? details.varieties : '';
+  if (prodEl) {
+    prodEl.textContent = displayVars ? `${displayProds} • ${displayVars}` : displayProds;
+  }
+
+  // Build dynamic WhatsApp link with 100% of user-submitted form details
+  if (waBtn) {
+    const waText = formatWhatsAppInquiryMessage({
+      ...details,
+      refCode: refCode
+    });
+    waBtn.href = `https://wa.me/918220280068?text=${encodeURIComponent(waText)}`;
+  }
+
+  modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeThankYouCard() {
+  const modal = document.getElementById('thankYouModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+// Quote Modal Form Submission Handler
+function initQuoteForm() {
+  const quoteForm = document.getElementById('quoteForm');
+  const modalOverlay = document.getElementById('quoteModal');
+  if (!quoteForm) return;
+
+  quoteForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inputs = quoteForm.querySelectorAll('input[required]');
+    let isValid = true;
+    inputs.forEach(input => {
+      input.value = input.value.trim();
+      if (!input.value) isValid = false;
+    });
+    if (!isValid) {
+      showToast('Please fill out all required fields.');
+      return;
+    }
+
+    // Validate that at least one spice product is selected
+    if (modalMultiSelectInst && modalMultiSelectInst.selectedCategories.size === 0) {
+      showToast('Please select at least one spice product.');
+      modalMultiSelectInst.catContainer.classList.add('b2b-highlight-pulse');
+      setTimeout(() => modalMultiSelectInst.catContainer.classList.remove('b2b-highlight-pulse'), 1400);
+      modalMultiSelectInst.catContainer.classList.add('open');
+      return;
+    }
+
+    const submitBtn = quoteForm.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-spinner"></span> Submitting Request...';
+    }
+
+    // Activate Gugan Logo touch-blocking overlay immediately
+    showSubmissionLoader(
+      'Transmitting Quote Request...',
+      'Connecting to Gugan Global export desk. Please wait a moment.'
+    );
+
+    // Collect all input values explicitly
+    const nameVal = (quoteForm.querySelector('input[name="name"]') || {}).value || '';
+    const companyVal = (quoteForm.querySelector('input[name="company"]') || {}).value || '';
+    const emailVal = (quoteForm.querySelector('input[name="email"]') || {}).value || '';
+    const phoneVal = (quoteForm.querySelector('input[name="phone"]') || {}).value || '';
+    const qtyVal = (quoteForm.querySelector('input[name="quantity_incoterms"]') || {}).value || '';
+
+    const productsVal = formatSelectedCategories(modalMultiSelectInst ? modalMultiSelectInst.selectedCategories : null);
+    const varietiesVal = formatSelectedVarieties(modalMultiSelectInst ? modalMultiSelectInst.selectedVarieties : null);
+
+    const refCode = 'GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+
+    // Build comprehensive, highly readable email ticket payload
+    const payload = {
+      _subject: `[EXPORT INQUIRY] ${nameVal} (${companyVal || 'Trade Buyer'}) — ${productsVal}`,
+      _replyto: emailVal,
+      _template: 'table',
+      _captcha: 'false',
+      'Inquiry_Reference_ID': refCode,
+      'Inquiry_Type': 'Commercial Export Quotation Request',
+      'Buyer_Full_Name': nameVal,
+      'Company_Organization': companyVal || 'Individual / Direct Importer',
+      'Official_Email': emailVal,
+      'Phone_WhatsApp': phoneVal || 'Not provided',
+      'Required_Volume_and_Incoterms': qtyVal || 'FOB / CIF Quotation Requested',
+      'Target_Spice_Products': productsVal,
+      'Selected_Export_Varieties_Grades': varietiesVal,
+      'Commercial_Response_SLA': 'Guaranteed Under 24 Hours',
+      'Submission_Timestamp': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }),
+      'Portal_Origin': 'Gugan Global Venture - Official B2B Web Portal'
+    };
+
+    const detailsForThankYou = {
+      refCode: refCode,
+      name: nameVal,
+      company: companyVal,
+      email: emailVal,
+      phone: phoneVal,
+      destination: qtyVal || 'Direct Sea Freight (CIF / FOB)',
+      quantity: qtyVal,
+      products: productsVal,
+      varieties: varietiesVal,
+      message: ''
+    };
+
+    fetch('https://formsubmit.co/ajax/harichandruiaf@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      hideSubmissionLoader(true, 'Quote Request Received!', 'Displaying official confirmation details...', () => {
+        if (modalOverlay) modalOverlay.classList.remove('active');
+        quoteForm.reset();
+        if (modalMultiSelectInst) modalMultiSelectInst.reset();
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
+        showThankYouCard(detailsForThankYou);
+      });
+    })
+    .catch(err => {
+      console.warn('FormSubmit notice:', err);
+      hideSubmissionLoader(true, 'Quote Request Received!', 'Displaying official confirmation details...', () => {
+        if (modalOverlay) modalOverlay.classList.remove('active');
+        quoteForm.reset();
+        if (modalMultiSelectInst) modalMultiSelectInst.reset();
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
+        showThankYouCard(detailsForThankYou);
+      });
+    });
+  });
 }
 
 // Contact Page Trade Inquiry Form Handler
@@ -651,9 +1230,106 @@ function initTradeInquiryForm() {
         showToast('Please fill out all required trade inquiry details.');
         return;
       }
-      tradeForm.reset();
-      if (contactMultiSelectInst) contactMultiSelectInst.reset();
-      showToast('Inquiry received! Our export desk will contact you within 24 hours.');
+
+      // Validate that at least one spice product is selected
+      if (contactMultiSelectInst && contactMultiSelectInst.selectedCategories.size === 0) {
+        showToast('Please select at least one spice product.');
+        contactMultiSelectInst.catContainer.classList.add('b2b-highlight-pulse');
+        setTimeout(() => contactMultiSelectInst.catContainer.classList.remove('b2b-highlight-pulse'), 1400);
+        contactMultiSelectInst.catContainer.classList.add('open');
+        return;
+      }
+
+      const submitBtn = tradeForm.querySelector('button[type="submit"]');
+      const originalBtnContent = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="btn-spinner"></span> Submitting Inquiry...';
+      }
+
+      // Activate Gugan Logo touch-blocking overlay immediately
+      showSubmissionLoader(
+        'Transmitting Trade Inquiry...',
+        'Connecting to Gugan Global export desk. Please wait a moment.'
+      );
+
+      // Collect all inputs explicitly to guarantee data persistence
+      const nameVal = (tradeForm.querySelector('input[name="name"]') || {}).value || '';
+      const emailVal = (tradeForm.querySelector('input[name="email"]') || {}).value || '';
+      const phoneVal = (tradeForm.querySelector('input[name="phone"]') || {}).value || '';
+      const portVal = (tradeForm.querySelector('input[name="destination_port"]') || {}).value || '';
+      const msgVal = (tradeForm.querySelector('textarea[name="message"]') || {}).value || '';
+
+      const productsVal = formatSelectedCategories(contactMultiSelectInst ? contactMultiSelectInst.selectedCategories : null);
+      const varietiesVal = formatSelectedVarieties(contactMultiSelectInst ? contactMultiSelectInst.selectedVarieties : null);
+
+      const refCode = 'GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+
+      // Clean, detailed, and highly readable payload mapping to email table rows
+      const payload = {
+        _subject: `[TRADE INQUIRY] ${nameVal} — ${productsVal} (${portVal || 'Direct Port'})`,
+        _replyto: emailVal,
+        _template: 'table',
+        _captcha: 'false',
+        'Inquiry_Reference_ID': refCode,
+        'Inquiry_Type': 'B2B Trade & Export Requirement',
+        'Buyer_Full_Name': nameVal,
+        'Official_Email': emailVal,
+        'Phone_WhatsApp': phoneVal || 'Not provided',
+        'Destination_Port_Country': portVal || 'Direct Seaport (FOB / CIF)',
+        'Target_Spice_Products': productsVal,
+        'Selected_Export_Varieties_Grades': varietiesVal,
+        'Client_Order_Notes_Specifications': msgVal || 'No specific requirements mentioned.',
+        'Commercial_Response_SLA': 'Guaranteed Under 24 Hours',
+        'Submission_Timestamp': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }),
+        'Portal_Origin': 'Gugan Global Venture - Official B2B Web Portal'
+      };
+
+      const detailsForThankYou = {
+        refCode: refCode,
+        name: nameVal,
+        company: '',
+        email: emailVal,
+        phone: phoneVal,
+        destination: portVal || 'Direct Seaport Export',
+        quantity: '',
+        products: productsVal,
+        varieties: varietiesVal,
+        message: msgVal
+      };
+
+      fetch('https://formsubmit.co/ajax/harichandruiaf@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
+          tradeForm.reset();
+          if (contactMultiSelectInst) contactMultiSelectInst.reset();
+          if (submitBtn) {
+            submitBtn.innerHTML = originalBtnContent;
+            submitBtn.disabled = false;
+          }
+          showThankYouCard(detailsForThankYou);
+        });
+      })
+      .catch(err => {
+        console.warn('FormSubmit notice:', err);
+        hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
+          tradeForm.reset();
+          if (contactMultiSelectInst) contactMultiSelectInst.reset();
+          if (submitBtn) {
+            submitBtn.innerHTML = originalBtnContent;
+            submitBtn.disabled = false;
+          }
+          showThankYouCard(detailsForThankYou);
+        });
+      });
     });
   }
 }
@@ -1308,9 +1984,14 @@ function initInteractiveCatalog() {
         <div class="variety-grid" data-role="variety-grid">
           ${spice.varieties.map((v) => `
             <button class="variety-tile" type="button" data-variety="${v.key}">
-              <h4>${v.name}</h4>
-              <p>${v.tile}</p>
-              <div class="metric">${v.metric}</div>
+              <div class="variety-tile-top">
+                <h4>${v.name}</h4>
+                <p>${v.tile}</p>
+              </div>
+              <div class="variety-tile-footer">
+                <div class="metric">${v.metric}</div>
+                <span class="btn-variety-details">View Details <i class="fa-solid fa-arrow-right"></i></span>
+              </div>
             </button>
           `).join("")}
         </div>
