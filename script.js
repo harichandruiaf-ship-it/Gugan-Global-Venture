@@ -1008,7 +1008,7 @@ function initThankYouModal() {
 // Helper to format WhatsApp message with all submitted B2B form details
 function formatWhatsAppInquiryMessage(details) {
   const lines = [
-    `*GUGAN GLOBAL VENTURE — EXPORT INQUIRY*`,
+    `*GUGAN GLOBAL VENTURE: EXPORT INQUIRY*`,
     `----------------------------------------`,
     `*Inquiry Ref:* ${details.refCode || 'GGV-EXPORT'}`,
     `*Buyer Name:* ${details.name || 'Trade Importer'}`
@@ -1059,7 +1059,7 @@ function showThankYouCard(details) {
   const refCode = details.refCode || ('GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000));
   if (refEl) refEl.textContent = refCode;
   if (nameEl) nameEl.textContent = details.name + (details.company ? ` (${details.company})` : '');
-  if (emailEl) emailEl.textContent = details.email || '—';
+  if (emailEl) emailEl.textContent = details.email || '-';
   if (destEl) destEl.textContent = details.destination || details.quantity || 'Direct Seaport Export (FOB / CIF)';
 
   const displayProds = details.products || 'Indian Spices';
@@ -1304,7 +1304,7 @@ function initQuoteForm() {
 
     // Build comprehensive, highly readable email ticket payload
     const payload = {
-      _subject: `[EXPORT INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} — ${productsVal} (${portVal || 'Direct Port'})`,
+      _subject: `[EXPORT INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} | ${productsVal} (${portVal || 'Direct Port'})`,
       _replyto: emailVal,
       _template: 'table',
       _captcha: 'false',
@@ -1418,7 +1418,7 @@ function initTradeInquiryForm() {
 
     // Clean, detailed, and highly readable payload mapping to email table rows
     const payload = {
-      _subject: `[TRADE INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} — ${productsVal} (${portVal || 'Direct Port'})`,
+      _subject: `[TRADE INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} | ${productsVal} (${portVal || 'Direct Port'})`,
       _replyto: emailVal,
       _template: 'table',
       _captcha: 'false',
