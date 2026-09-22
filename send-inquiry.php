@@ -3,7 +3,7 @@
  * Gugan Global Venture - Ultra-Fast Server-Side Mailer for GoDaddy
  * 
  * Takes form submissions and delivers them via PHP mail() in <100ms.
- * Recipient: harichandruiaf@gmail.com
+ * Recipient: info@guganglobalventure.com
  */
 
 // Allow cross-origin requests & set JSON response
@@ -36,7 +36,7 @@ if (!empty($input['_honey'])) {
     exit;
 }
 
-$recipient = "harichandruiaf@gmail.com";
+$recipient = "info@guganglobalventure.com";
 $subject = !empty($input['_subject']) ? strip_tags($input['_subject']) : "New B2B Inquiry - Gugan Global Venture";
 
 $senderName  = !empty($input['name'])  ? htmlspecialchars(trim($input['name'])) : 'Website Visitor';

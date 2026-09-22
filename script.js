@@ -280,9 +280,8 @@ function escapeHTML(str) {
 const SPICE_VARIETIES_MASTER = [
   // Red Chilli
   { category: 'chilli', key: 'teja', name: 'Teja S17 Chilli (Guntur - High Heat)' },
-  { category: 'chilli', key: 'sannam-s4', name: 'Sannam S4 Chilli (S10 - Medium Heat)' },
+  { category: 'chilli', key: 'sannam-s4', name: 'Sannam S4 / 334 Chilli (Guntur - Medium Heat)' },
   { category: 'chilli', key: 'byadgi', name: 'Byadgi Chilli (Karnataka - Deep Red)' },
-  { category: 'chilli', key: '334', name: '334 Sannam Chilli (Popular Export Grade)' },
   { category: 'chilli', key: 'wonder-hot', name: 'Wonder Hot Chilli (Pungent Export Grade)' },
 
   // Turmeric
@@ -1177,7 +1176,7 @@ function initQuoteForm() {
       message: ''
     };
 
-    fetch('https://formsubmit.co/ajax/harichandruiaf@gmail.com', {
+    fetch('https://formsubmit.co/ajax/info@guganglobalventure.com', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1298,7 +1297,7 @@ function initTradeInquiryForm() {
         message: msgVal
       };
 
-      fetch('https://formsubmit.co/ajax/harichandruiaf@gmail.com', {
+      fetch('https://formsubmit.co/ajax/info@guganglobalventure.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1350,7 +1349,7 @@ function initInteractiveCatalog() {
       dot: "#C22E1A",
       overview: {
         badge: "RED CHILLI",
-        note: "5 export varieties available",
+        note: "4 export varieties available",
         name: "Dry Red Chilli",
         origin: "Origin: Andhra Pradesh & Karnataka",
         desc: "Select a variety Below for Heat Range, Colour Value, Moisture, and Packing grades used in export Contracts.",
@@ -1388,42 +1387,22 @@ function initInteractiveCatalog() {
         },
         {
           key: "sannam-s4",
-          name: "Sannam S4",
-          badge: "BALANCED HEAT",
-          note: "75% of India production · high demand",
+          name: "Sannam S4 / 334",
+          badge: "HIGH DEMAND",
+          note: "Also sold as 334, Sannam, and S-4",
           origin: "Guntur, Warangal & Khammam",
           desc: "The Guntur Sannam chilli pepper is grown extensively in Guntur, Warangal, and Khammam, and represents 75% of India's total production. One of the most in-demand red chilli varieties out there, it's also sold under the names 334, Sannam, and S-4.",
-          tile: "Perfect balance of heat and colour.",
+          tile: "Sold as 334, Sannam, and S-4.",
           metric: "35,000 – 45,000 SHU",
           forms: "Whole, Stemless, Crushed, Powder",
           specs: [
             ["Heat (SHU)", "35,000 – 45,000"],
-            ["Colour Value (ASTA)", "40-50 Max"],
+            ["Colour Value (ASTA)", "30-40 Max"],
             ["Flavour", "Medium Spicy"],
             ["Moisture", "Less Than 10 %"],
             ["Length", "5-7 Cm (Without Stem)"],
-            ["Skin", "Thin"],
-            ["Capsaicin", "0.4%"]
-          ]
-        },
-        {
-          key: "334",
-          name: "Sannam 334",
-          badge: "EXPORT GRADE",
-          note: "Bright red · excelente processing",
-          origin: "Guntur, Andhra Pradesh",
-          desc: "334 Sannam is a premium export-grade Indian chilli variety prized for its bright red colour, balanced heat, and excellent processing performance. Grown in Guntur, Andhra Pradesh, it is widely used in chilli powder manufacturing, spice blends, and food processing industries, making it a trusted choice for international buyers.",
-          tile: "Bright red with consistent quality.",
-          metric: "30,000 – 45,000 SHU",
-          forms: "Whole, Stemless, Crushed, Powder",
-          specs: [
-            ["Heat (SHU)", "30,000 – 45,000"],
-            ["Colour Value (ASTA)", "70-100 Max"],
-            ["Flavour", "Moderately Spicy"],
-            ["Moisture", "Less Than 10 %"],
-            ["Length", "8-10cm (Without Stem)"],
-            ["Skin", "Medium"],
-            ["Capsaicin", "0.25%"]
+            ["Skin", "Thick"],
+            ["Capsaicin", "0.23%"]
           ]
         },
         {
