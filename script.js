@@ -1090,31 +1090,189 @@ function closeThankYouCard() {
   document.body.style.overflow = '';
 }
 
+// ==========================================================================
+// COMPREHENSIVE FORM VALIDATION & SANITIZATION ENGINE
+// ==========================================================================
+
+function setFieldError(fieldEl, message) {
+  if (!fieldEl) return;
+  fieldEl.classList.add('is-invalid');
+  const parentGroup = fieldEl.closest('.form-group') || fieldEl.parentElement;
+  if (!parentGroup) return;
+
+  let errEl = parentGroup.querySelector('.form-field-error');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.className = 'form-field-error';
+    parentGroup.appendChild(errEl);
+  }
+  errEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>${escapeHTML(message)}</span>`;
+}
+
+function clearFieldError(fieldEl) {
+  if (!fieldEl) return;
+  fieldEl.classList.remove('is-invalid');
+  const parentGroup = fieldEl.closest('.form-group') || fieldEl.parentElement;
+  if (parentGroup) {
+    const errEl = parentGroup.querySelector('.form-field-error');
+    if (errEl) errEl.remove();
+  }
+}
+
+function clearFormErrors(form) {
+  if (!form) return;
+  form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+  form.querySelectorAll('.form-field-error').forEach(el => el.remove());
+}
+
+function setupFormRealtimeValidation(form, multiSelectInst) {
+  if (!form) return;
+
+  // Clear errors on user input / blur
+  form.querySelectorAll('input, textarea').forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.classList.contains('is-invalid')) {
+        clearFieldError(input);
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      const val = input.value.trim();
+      if (input.hasAttribute('required') && !val) {
+        const label = (input.closest('.form-group')?.querySelector('label') || {}).textContent || 'This field';
+        setFieldError(input, `${label.replace('*', '').trim()} is required.`);
+      } else if (input.type === 'email' && val) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(val)) {
+          setFieldError(input, 'Please enter a valid email address.');
+        } else {
+          clearFieldError(input);
+        }
+      } else if (input.type === 'tel' && val) {
+        const digitsOnly = val.replace(/[^0-9]/g, '');
+        if (digitsOnly.length < 7) {
+          setFieldError(input, 'Please enter a valid phone number (min 7 digits).');
+        } else {
+          clearFieldError(input);
+        }
+      }
+    });
+  });
+
+  if (multiSelectInst) {
+    if (multiSelectInst.catContainer) {
+      multiSelectInst.catContainer.addEventListener('click', () => {
+        if (multiSelectInst.catContainer.classList.contains('is-invalid')) {
+          clearFieldError(multiSelectInst.catContainer);
+        }
+      });
+    }
+    if (multiSelectInst.varContainer) {
+      multiSelectInst.varContainer.addEventListener('click', () => {
+        if (multiSelectInst.varContainer.classList.contains('is-invalid')) {
+          clearFieldError(multiSelectInst.varContainer);
+        }
+      });
+    }
+  }
+}
+
+function validateUnifiedForm(form, multiSelectInst) {
+  clearFormErrors(form);
+  let isValid = true;
+  let firstInvalidEl = null;
+
+  function markInvalid(el, msg) {
+    isValid = false;
+    setFieldError(el, msg);
+    if (!firstInvalidEl) firstInvalidEl = el;
+  }
+
+  // 1. Full Name
+  const nameInput = form.querySelector('input[name="name"]');
+  if (nameInput) {
+    const nameVal = nameInput.value.trim();
+    if (!nameVal) {
+      markInvalid(nameInput, 'Full Name is required.');
+    } else if (nameVal.length < 2) {
+      markInvalid(nameInput, 'Full Name must be at least 2 characters.');
+    }
+  }
+
+  // 2. Email Address
+  const emailInput = form.querySelector('input[name="email"]');
+  if (emailInput) {
+    const emailVal = emailInput.value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailVal) {
+      markInvalid(emailInput, 'Email address is required.');
+    } else if (!emailRegex.test(emailVal)) {
+      markInvalid(emailInput, 'Please enter a valid business email address.');
+    }
+  }
+
+  // 3. Phone / WhatsApp
+  const phoneInput = form.querySelector('input[name="phone"]');
+  if (phoneInput) {
+    const phoneVal = phoneInput.value.trim();
+    const digitsOnly = phoneVal.replace(/[^0-9]/g, '');
+    if (!phoneVal) {
+      markInvalid(phoneInput, 'Phone number / WhatsApp is required.');
+    } else if (digitsOnly.length < 7) {
+      markInvalid(phoneInput, 'Please enter a valid phone number with country code (min 7 digits).');
+    }
+  }
+
+  // 4. Country / Destination Port
+  const portInput = form.querySelector('input[name="destination_port"]');
+  if (portInput) {
+    const portVal = portInput.value.trim();
+    if (!portVal) {
+      markInvalid(portInput, 'Country / Destination Port is required.');
+    } else if (portVal.length < 2) {
+      markInvalid(portInput, 'Please specify your country or destination seaport.');
+    }
+  }
+
+  // 5. Spice Products Multiselect
+  if (multiSelectInst) {
+    if (!multiSelectInst.selectedCategories || multiSelectInst.selectedCategories.size === 0) {
+      markInvalid(multiSelectInst.catContainer, 'Please select at least one spice product.');
+      multiSelectInst.catContainer.classList.add('b2b-highlight-pulse');
+      setTimeout(() => multiSelectInst.catContainer.classList.remove('b2b-highlight-pulse'), 1400);
+    } else if (!multiSelectInst.selectedVarieties || multiSelectInst.selectedVarieties.size === 0) {
+      // 6. Spice Varieties Multiselect
+      markInvalid(multiSelectInst.varContainer, 'Please select at least one spice variety.');
+      multiSelectInst.varContainer.classList.add('b2b-highlight-pulse');
+      setTimeout(() => multiSelectInst.varContainer.classList.remove('b2b-highlight-pulse'), 1400);
+    }
+  }
+
+  if (!isValid && firstInvalidEl) {
+    if (typeof firstInvalidEl.focus === 'function') {
+      firstInvalidEl.focus();
+    } else {
+      const focusable = firstInvalidEl.querySelector('input, select, [tabindex="0"]');
+      if (focusable) focusable.focus();
+    }
+  }
+
+  return isValid;
+}
+
 // Quote Modal Form Submission Handler
 function initQuoteForm() {
   const quoteForm = document.getElementById('quoteForm');
   const modalOverlay = document.getElementById('quoteModal');
   if (!quoteForm) return;
 
+  setupFormRealtimeValidation(quoteForm, modalMultiSelectInst);
+
   quoteForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const inputs = quoteForm.querySelectorAll('input[required]');
-    let isValid = true;
-    inputs.forEach(input => {
-      input.value = input.value.trim();
-      if (!input.value) isValid = false;
-    });
-    if (!isValid) {
-      showToast('Please fill out all required fields.');
-      return;
-    }
 
-    // Validate that at least one spice product is selected
-    if (modalMultiSelectInst && modalMultiSelectInst.selectedCategories.size === 0) {
-      showToast('Please select at least one spice product.');
-      modalMultiSelectInst.catContainer.classList.add('b2b-highlight-pulse');
-      setTimeout(() => modalMultiSelectInst.catContainer.classList.remove('b2b-highlight-pulse'), 1400);
-      modalMultiSelectInst.catContainer.classList.add('open');
+    if (!validateUnifiedForm(quoteForm, modalMultiSelectInst)) {
+      showToast('Please correct the highlighted fields before submitting.');
       return;
     }
 
@@ -1132,11 +1290,12 @@ function initQuoteForm() {
     );
 
     // Collect all input values explicitly
-    const nameVal = (quoteForm.querySelector('input[name="name"]') || {}).value || '';
-    const companyVal = (quoteForm.querySelector('input[name="company"]') || {}).value || '';
-    const emailVal = (quoteForm.querySelector('input[name="email"]') || {}).value || '';
-    const phoneVal = (quoteForm.querySelector('input[name="phone"]') || {}).value || '';
-    const qtyVal = (quoteForm.querySelector('input[name="quantity_incoterms"]') || {}).value || '';
+    const nameVal = (quoteForm.querySelector('input[name="name"]') || {}).value.trim();
+    const companyVal = (quoteForm.querySelector('input[name="company"]') || {}).value.trim();
+    const emailVal = (quoteForm.querySelector('input[name="email"]') || {}).value.trim();
+    const phoneVal = (quoteForm.querySelector('input[name="phone"]') || {}).value.trim();
+    const portVal = (quoteForm.querySelector('input[name="destination_port"]') || {}).value.trim();
+    const msgVal = (quoteForm.querySelector('textarea[name="message"]') || {}).value.trim();
 
     const productsVal = formatSelectedCategories(modalMultiSelectInst ? modalMultiSelectInst.selectedCategories : null);
     const varietiesVal = formatSelectedVarieties(modalMultiSelectInst ? modalMultiSelectInst.selectedVarieties : null);
@@ -1145,19 +1304,20 @@ function initQuoteForm() {
 
     // Build comprehensive, highly readable email ticket payload
     const payload = {
-      _subject: `[EXPORT INQUIRY] ${nameVal} (${companyVal || 'Trade Buyer'}) — ${productsVal}`,
+      _subject: `[EXPORT INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} — ${productsVal} (${portVal || 'Direct Port'})`,
       _replyto: emailVal,
       _template: 'table',
       _captcha: 'false',
       'Inquiry_Reference_ID': refCode,
       'Inquiry_Type': 'Commercial Export Quotation Request',
       'Buyer_Full_Name': nameVal,
-      'Company_Organization': companyVal || 'Individual / Direct Importer',
+      'Company_Organization': companyVal || 'Direct Trade Importer',
       'Official_Email': emailVal,
       'Phone_WhatsApp': phoneVal || 'Not provided',
-      'Required_Volume_and_Incoterms': qtyVal || 'FOB / CIF Quotation Requested',
+      'Destination_Port_Country': portVal || 'Direct Seaport Export (FOB / CIF)',
       'Target_Spice_Products': productsVal,
       'Selected_Export_Varieties_Grades': varietiesVal,
+      'Client_Order_Notes_Specifications': msgVal || 'No specific requirements mentioned.',
       'Commercial_Response_SLA': 'Guaranteed Under 24 Hours',
       'Submission_Timestamp': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }),
       'Portal_Origin': 'Gugan Global Venture - Official B2B Web Portal'
@@ -1169,11 +1329,11 @@ function initQuoteForm() {
       company: companyVal,
       email: emailVal,
       phone: phoneVal,
-      destination: qtyVal || 'Direct Sea Freight (CIF / FOB)',
-      quantity: qtyVal,
+      destination: portVal || 'Direct Seaport (FOB / CIF)',
+      quantity: '',
       products: productsVal,
       varieties: varietiesVal,
-      message: ''
+      message: msgVal
     };
 
     fetch('https://formsubmit.co/ajax/info@guganglobalventure.com', {
@@ -1189,6 +1349,7 @@ function initQuoteForm() {
       hideSubmissionLoader(true, 'Quote Request Received!', 'Displaying official confirmation details...', () => {
         if (modalOverlay) modalOverlay.classList.remove('active');
         quoteForm.reset();
+        clearFormErrors(quoteForm);
         if (modalMultiSelectInst) modalMultiSelectInst.reset();
         if (submitBtn) {
           submitBtn.innerHTML = originalBtnContent;
@@ -1202,6 +1363,7 @@ function initQuoteForm() {
       hideSubmissionLoader(true, 'Quote Request Received!', 'Displaying official confirmation details...', () => {
         if (modalOverlay) modalOverlay.classList.remove('active');
         quoteForm.reset();
+        clearFormErrors(quoteForm);
         if (modalMultiSelectInst) modalMultiSelectInst.reset();
         if (submitBtn) {
           submitBtn.innerHTML = originalBtnContent;
@@ -1216,121 +1378,113 @@ function initQuoteForm() {
 // Contact Page Trade Inquiry Form Handler
 function initTradeInquiryForm() {
   const tradeForm = document.getElementById('tradeInquiryForm');
-  if (tradeForm) {
-    tradeForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const inputs = tradeForm.querySelectorAll('input[required]');
-      let isValid = true;
-      inputs.forEach(input => {
-        input.value = input.value.trim();
-        if (!input.value) isValid = false;
+  if (!tradeForm) return;
+
+  setupFormRealtimeValidation(tradeForm, contactMultiSelectInst);
+
+  tradeForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    if (!validateUnifiedForm(tradeForm, contactMultiSelectInst)) {
+      showToast('Please correct the highlighted fields before submitting.');
+      return;
+    }
+
+    const submitBtn = tradeForm.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-spinner"></span> Submitting Inquiry...';
+    }
+
+    // Activate Gugan Logo touch-blocking overlay immediately
+    showSubmissionLoader(
+      'Transmitting Trade Inquiry...',
+      'Connecting to Gugan Global export desk. Please wait a moment.'
+    );
+
+    // Collect all inputs explicitly to guarantee data persistence
+    const nameVal = (tradeForm.querySelector('input[name="name"]') || {}).value.trim();
+    const companyVal = (tradeForm.querySelector('input[name="company"]') || {}).value.trim();
+    const emailVal = (tradeForm.querySelector('input[name="email"]') || {}).value.trim();
+    const phoneVal = (tradeForm.querySelector('input[name="phone"]') || {}).value.trim();
+    const portVal = (tradeForm.querySelector('input[name="destination_port"]') || {}).value.trim();
+    const msgVal = (tradeForm.querySelector('textarea[name="message"]') || {}).value.trim();
+
+    const productsVal = formatSelectedCategories(contactMultiSelectInst ? contactMultiSelectInst.selectedCategories : null);
+    const varietiesVal = formatSelectedVarieties(contactMultiSelectInst ? contactMultiSelectInst.selectedVarieties : null);
+
+    const refCode = 'GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+
+    // Clean, detailed, and highly readable payload mapping to email table rows
+    const payload = {
+      _subject: `[TRADE INQUIRY] ${nameVal}${companyVal ? ' (' + companyVal + ')' : ''} — ${productsVal} (${portVal || 'Direct Port'})`,
+      _replyto: emailVal,
+      _template: 'table',
+      _captcha: 'false',
+      'Inquiry_Reference_ID': refCode,
+      'Inquiry_Type': 'B2B Trade & Export Requirement',
+      'Buyer_Full_Name': nameVal,
+      'Company_Organization': companyVal || 'Direct Trade Importer',
+      'Official_Email': emailVal,
+      'Phone_WhatsApp': phoneVal || 'Not provided',
+      'Destination_Port_Country': portVal || 'Direct Seaport (FOB / CIF)',
+      'Target_Spice_Products': productsVal,
+      'Selected_Export_Varieties_Grades': varietiesVal,
+      'Client_Order_Notes_Specifications': msgVal || 'No specific requirements mentioned.',
+      'Commercial_Response_SLA': 'Guaranteed Under 24 Hours',
+      'Submission_Timestamp': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }),
+      'Portal_Origin': 'Gugan Global Venture - Official B2B Web Portal'
+    };
+
+    const detailsForThankYou = {
+      refCode: refCode,
+      name: nameVal,
+      company: companyVal,
+      email: emailVal,
+      phone: phoneVal,
+      destination: portVal || 'Direct Seaport Export',
+      quantity: '',
+      products: productsVal,
+      varieties: varietiesVal,
+      message: msgVal
+    };
+
+    fetch('https://formsubmit.co/ajax/info@guganglobalventure.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
+        tradeForm.reset();
+        clearFormErrors(tradeForm);
+        if (contactMultiSelectInst) contactMultiSelectInst.reset();
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
+        showThankYouCard(detailsForThankYou);
       });
-      if (!isValid) {
-        showToast('Please fill out all required trade inquiry details.');
-        return;
-      }
-
-      // Validate that at least one spice product is selected
-      if (contactMultiSelectInst && contactMultiSelectInst.selectedCategories.size === 0) {
-        showToast('Please select at least one spice product.');
-        contactMultiSelectInst.catContainer.classList.add('b2b-highlight-pulse');
-        setTimeout(() => contactMultiSelectInst.catContainer.classList.remove('b2b-highlight-pulse'), 1400);
-        contactMultiSelectInst.catContainer.classList.add('open');
-        return;
-      }
-
-      const submitBtn = tradeForm.querySelector('button[type="submit"]');
-      const originalBtnContent = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="btn-spinner"></span> Submitting Inquiry...';
-      }
-
-      // Activate Gugan Logo touch-blocking overlay immediately
-      showSubmissionLoader(
-        'Transmitting Trade Inquiry...',
-        'Connecting to Gugan Global export desk. Please wait a moment.'
-      );
-
-      // Collect all inputs explicitly to guarantee data persistence
-      const nameVal = (tradeForm.querySelector('input[name="name"]') || {}).value || '';
-      const emailVal = (tradeForm.querySelector('input[name="email"]') || {}).value || '';
-      const phoneVal = (tradeForm.querySelector('input[name="phone"]') || {}).value || '';
-      const portVal = (tradeForm.querySelector('input[name="destination_port"]') || {}).value || '';
-      const msgVal = (tradeForm.querySelector('textarea[name="message"]') || {}).value || '';
-
-      const productsVal = formatSelectedCategories(contactMultiSelectInst ? contactMultiSelectInst.selectedCategories : null);
-      const varietiesVal = formatSelectedVarieties(contactMultiSelectInst ? contactMultiSelectInst.selectedVarieties : null);
-
-      const refCode = 'GGV-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
-
-      // Clean, detailed, and highly readable payload mapping to email table rows
-      const payload = {
-        _subject: `[TRADE INQUIRY] ${nameVal} — ${productsVal} (${portVal || 'Direct Port'})`,
-        _replyto: emailVal,
-        _template: 'table',
-        _captcha: 'false',
-        'Inquiry_Reference_ID': refCode,
-        'Inquiry_Type': 'B2B Trade & Export Requirement',
-        'Buyer_Full_Name': nameVal,
-        'Official_Email': emailVal,
-        'Phone_WhatsApp': phoneVal || 'Not provided',
-        'Destination_Port_Country': portVal || 'Direct Seaport (FOB / CIF)',
-        'Target_Spice_Products': productsVal,
-        'Selected_Export_Varieties_Grades': varietiesVal,
-        'Client_Order_Notes_Specifications': msgVal || 'No specific requirements mentioned.',
-        'Commercial_Response_SLA': 'Guaranteed Under 24 Hours',
-        'Submission_Timestamp': new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }),
-        'Portal_Origin': 'Gugan Global Venture - Official B2B Web Portal'
-      };
-
-      const detailsForThankYou = {
-        refCode: refCode,
-        name: nameVal,
-        company: '',
-        email: emailVal,
-        phone: phoneVal,
-        destination: portVal || 'Direct Seaport Export',
-        quantity: '',
-        products: productsVal,
-        varieties: varietiesVal,
-        message: msgVal
-      };
-
-      fetch('https://formsubmit.co/ajax/info@guganglobalventure.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
-          tradeForm.reset();
-          if (contactMultiSelectInst) contactMultiSelectInst.reset();
-          if (submitBtn) {
-            submitBtn.innerHTML = originalBtnContent;
-            submitBtn.disabled = false;
-          }
-          showThankYouCard(detailsForThankYou);
-        });
-      })
-      .catch(err => {
-        console.warn('FormSubmit notice:', err);
-        hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
-          tradeForm.reset();
-          if (contactMultiSelectInst) contactMultiSelectInst.reset();
-          if (submitBtn) {
-            submitBtn.innerHTML = originalBtnContent;
-            submitBtn.disabled = false;
-          }
-          showThankYouCard(detailsForThankYou);
-        });
+    })
+    .catch(err => {
+      console.warn('FormSubmit notice:', err);
+      hideSubmissionLoader(true, 'Inquiry Sent Successfully!', 'Displaying official confirmation details...', () => {
+        tradeForm.reset();
+        clearFormErrors(tradeForm);
+        if (contactMultiSelectInst) contactMultiSelectInst.reset();
+        if (submitBtn) {
+          submitBtn.innerHTML = originalBtnContent;
+          submitBtn.disabled = false;
+        }
+        showThankYouCard(detailsForThankYou);
       });
     });
-  }
+  });
 }
 
 // Interactive Spice Catalog Engine (Grade Switcher)

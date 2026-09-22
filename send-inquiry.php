@@ -39,8 +39,14 @@ if (!empty($input['_honey'])) {
 $recipient = "info@guganglobalventure.com";
 $subject = !empty($input['_subject']) ? strip_tags($input['_subject']) : "New B2B Inquiry - Gugan Global Venture";
 
-$senderName  = !empty($input['name'])  ? htmlspecialchars(trim($input['name'])) : 'Website Visitor';
+$senderName  = !empty($input['name'])  ? htmlspecialchars(trim($input['name'])) : '';
 $senderEmail = !empty($input['email']) ? filter_var(trim($input['email']), FILTER_VALIDATE_EMAIL) : '';
+
+if (empty($senderName) || mb_strlen($senderName) < 2) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Please provide your full name."]);
+    exit;
+}
 
 if (!$senderEmail) {
     http_response_code(400);
@@ -171,7 +177,10 @@ $emailBody = "
 
       <!-- Footer Compliance -->
       <div class='footer'>
+        <!-- ISO Mention (Uncomment when certified):
         Gugan Global Venture • Spices Board RCMC Registered Exporter • ISO 22000 Certified<br>
+        -->
+        Gugan Global Venture • Spices Board RCMC Registered Exporter • FIEO Member<br>
         Received: {$timestamp} • Automated trade desk notification
       </div>
     </div>
