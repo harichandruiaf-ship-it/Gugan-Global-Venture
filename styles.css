@@ -1042,10 +1042,17 @@ button {
 .seals-marquee-track {
   display: flex;
   align-items: center;
-  gap: 0;
   width: max-content;
-  animation: sealsMarqueeScroll 32s linear infinite;
+  animation: sealsMarqueeScroll 48s linear infinite;
   will-change: transform;
+}
+
+.seals-marquee-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 36px;
+  padding-right: 36px;
 }
 
 .seals-marquee-wrapper:hover .seals-marquee-track {
@@ -1071,7 +1078,6 @@ button {
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   flex-shrink: 0;
-  margin-right: 36px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -1088,11 +1094,10 @@ button {
 }
 
 .seal-img-fieo {
-  height: 64px;
-  width: 64px;
+  height: 58px;
+  width: 58px;
   max-width: none;
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
 }
 
 .seal-logo-item span {
@@ -4633,13 +4638,16 @@ button {
     width: 40px !important;
   }
   .seals-marquee-track {
-    gap: 0 !important;
-    animation-duration: 24s !important;
+    animation-duration: 36s !important;
+  }
+  .seals-marquee-group {
+    gap: 16px !important;
+    padding-right: 16px !important;
   }
   .seal-logo-item {
     padding: 6px 14px !important;
     gap: 10px !important;
-    margin-right: 16px !important;
+    margin-right: 0 !important;
     border-radius: 20px !important;
   }
   .seal-img {
@@ -4647,8 +4655,8 @@ button {
     max-width: 55px !important;
   }
   .seal-img-fieo {
-    height: 48px !important;
-    width: 48px !important;
+    height: 46px !important;
+    width: 46px !important;
     max-width: none !important;
   }
   .seal-logo-item span {
