@@ -1354,6 +1354,7 @@ function initInteractiveCatalog() {
         origin: "Origin: Andhra Pradesh & Karnataka",
         desc: "Select a variety Below for Heat Range, Colour Value, Moisture, and Packing grades used in export Contracts.",
         tagline: "Premium Quality • Authentic Origin • Export Excellence",
+        image: "assets/dry_red_chilli.png",
         specs: [
           ["Heat (SHU)", "8,000 – 100,000 SHU"],
           ["Colour Value (ASTA)", "40 – 140 Max"],
@@ -1373,6 +1374,7 @@ function initInteractiveCatalog() {
           origin: "Grown mainly in Andhra Pradesh and Telangana",
           desc: "Teja (S17) is a premium Indian chilli variety known for its exceptional heat, rich red colour, and high capsaicin content. Grown mainly in Andhra Pradesh and Telangana, it is a preferred choice for global spice manufacturers and food processing industries.",
           tile: "Extremely hot with intense pungency.",
+          image: "assets/chilli_teja.jpg",
           metric: "85,000 – 100,000 SHU",
           forms: "Whole, Stemless, Crushed, Powder",
           specs: [
@@ -1393,6 +1395,7 @@ function initInteractiveCatalog() {
           origin: "Guntur, Warangal & Khammam",
           desc: "The Guntur Sannam chilli pepper is grown extensively in Guntur, Warangal, and Khammam, and represents 75% of India's total production. One of the most in-demand red chilli varieties out there, it's also sold under the names 334, Sannam, and S-4.",
           tile: "Sold as 334, Sannam, and S-4.",
+          image: "assets/chilli_sannam.jpg",
           metric: "35,000 – 45,000 SHU",
           forms: "Whole, Stemless, Crushed, Powder",
           specs: [
@@ -1413,6 +1416,7 @@ function initInteractiveCatalog() {
           origin: "Karnataka, India",
           desc: "Byadgi is a premium GI-tagged Indian chilli variety renowned for its deep crimson-red colour, mild pungency, and exceptional colouring properties. Grown in Karnataka, it is widely used in chilli powder manufacturing, spice blends, and oleoresin extraction, making it one of the most preferred export varieties for the global food industry.",
           tile: "Rich colour with mild heat.",
+          image: "assets/chilli_byadgi.jpg",
           metric: "8,000 – 15,000 SHU",
           forms: "Whole, Stemless, Crushed, Powder",
           specs: [
@@ -1433,6 +1437,7 @@ function initInteractiveCatalog() {
           origin: "Andhra Pradesh, India",
           desc: "Wonder Hot is a high-pungency Indian dry red chilli variety valued for its intense heat, vibrant red colour, and reliable export quality. Sourced from Andhra Pradesh, it is widely used in chilli powder production, spice blends, hot sauces, and food processing industries, making it an excellent choice for buyers seeking consistent heat and performance.",
           tile: "High-pungency chilli for processing",
+          image: "assets/chilli_wonder_hot.jpg",
           metric: "40,000 – 60,000 SHU",
           forms: "Whole, Stemless, Crushed, Powder",
           specs: [
@@ -1462,6 +1467,7 @@ function initInteractiveCatalog() {
         origin: "Origin: Tamil Nadu, Telangana, Maharashtra & Meghalaya",
         desc: "Finger and Bulb grades sort by Curcumin Content and polishing finish for food and colour applications.",
         tagline: "Pure • Potent • Naturally Golden",
+        image: "assets/turmeric_finger.png",
         specs: [
           ["Curcumin Content", "2.5% – 12%"],
           ["ASTA Colour Value", "70+ to 100+"],
@@ -1481,6 +1487,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Erode, Tamil Nadu, India",
           desc: "Renowned as India's \"Turmeric City\" variety, Erode Turmeric is valued for its vibrant golden-yellow colour, rich aroma, and consistent curcumin content. It is a preferred choice for global spice, pharmaceutical, food processing, and natural colouring industries.",
           tile: "Premium golden turmeric with rich aroma and consistent curcumin.",
+          image: "assets/turmeric_erode.jpg",
           metric: "Curcumin 3.5 – 5%",
           forms: "Polished, Double Polished",
           specs: [
@@ -1502,6 +1509,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Salem, Tamil Nadu, India",
           desc: "Renowned for polished appearance, rich golden hue, and superior quality. Preferred by international buyers for retail and food processing applications. Excellent curcumin retention with consistent finger size.",
           tile: "Superior colour, balanced curcumin, and trusted export quality.",
+          image: "assets/turmeric_salem.jpg",
           metric: "Curcumin 3 – 4.5%",
           forms: "Polished",
           specs: [
@@ -1523,6 +1531,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Nizamabad, Telangana, India",
           desc: "Nizamabad Turmeric is a premium export-grade variety appreciated for its bright yellow colour, pleasant aroma, and consistent curcumin content. Sourced from Telangana's renowned turmeric-growing region, it is widely used in food processing, pharmaceuticals, nutraceuticals, and spice manufacturing for international markets.",
           tile: "Naturally vibrant turmeric with excellent processing performance.",
+          image: "assets/turmeric_nizamabad.webp",
           metric: "Curcumin 3 – 4.5%",
           forms: "Polished, Unpolished",
           specs: [
@@ -1544,6 +1553,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Sangli, Maharashtra, India",
           desc: "Rajapuri (Sangli) Turmeric is India's leading commercial turmeric variety, valued for its large fingers, bright yellow colour, and consistent processing quality. It is widely exported for spice manufacturing, food processing, pharmaceutical, and nutraceutical applications worldwide.",
           tile: "Large finger turmeric preferred for bulk exports worldwide.",
+          image: "assets/turmeric_rajapuri.jpg",
           metric: "Curcumin 2.5 – 4%",
           forms: "Polished",
           specs: [
@@ -1565,6 +1575,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Lakadong, Meghalaya, India",
           desc: "Lakadong Turmeric is a premium high-curcumin variety from Meghalaya, renowned for its exceptional purity, rich golden colour, and superior medicinal value. Its outstanding quality makes it a preferred choice for pharmaceutical, nutraceutical, wellness, and premium food applications worldwide.",
           tile: "High-curcumin premium turmeric with exceptional purity and potency.",
+          image: "assets/turmeric_lakadong.jpg",
           metric: "Curcumin 7-12%",
           forms: "Double Polished, Premium Cleaned",
           specs: [
@@ -1595,6 +1606,7 @@ function initInteractiveCatalog() {
         origin: "Origin: Kerala & Tamil Nadu (Western Ghats)",
         desc: "Select an export grade below to view quality parameters, capsule size, moisture, and packing options.",
         tagline: "Aromatic • Premium • Superior",
+        image: "assets/green_cardamom.png",
         specs: [
           ["Capsule Size", "6.5 mm to > 8 mm"],
           ["Grade", "Export / Premium Export"],
@@ -1614,6 +1626,7 @@ function initInteractiveCatalog() {
           origin: "Origin - Idukki, Kerala, India",
           desc: "The finest export grade of Indian green cardamom, AGEB is distinguished by its extra-large capsules, vibrant green colour, and intense natural aroma. It is the preferred choice for premium retail, gourmet food products, and international spice markets.",
           tile: "Extra-large premium capsules with vibrant green colour and exceptional aroma.",
+          image: "assets/cardamom_ageb.webp",
           metric: "Capsule > 8 mm",
           forms: "Extra Bold, Premium Grade",
           specs: [
@@ -1634,6 +1647,7 @@ function initInteractiveCatalog() {
           origin: "Origin - Idukki, Kerala, India",
           desc: "AGB features bold, uniformly graded green capsules with a rich aroma and excellent flavour. Its consistent quality and attractive appearance make it ideal for bulk exports, food processing, and spice manufacturing.",
           tile: "Bold green capsules offering rich flavour, uniform size, and export-grade quality.",
+          image: "assets/cardamom_agb.jpg",
           metric: "Capsule 7-8 mm",
           forms: "Bold, Export Grade",
           specs: [
@@ -1654,6 +1668,7 @@ function initInteractiveCatalog() {
           origin: "Origin - Idukki, Kerala, India",
           desc: "AGS is a well-graded commercial export quality cardamom offering balanced size, natural green colour, and pleasant aroma. It is widely used in spice blends, beverages, and food processing industries across global markets.",
           tile: "Well-graded green capsules with pleasant aroma and consistent commercial quality.",
+          image: "assets/cardamom_ags.webp",
           metric: "Capsule 6.5-7 mm",
           forms: "Superior, Commercial Grade",
           specs: [
@@ -1683,6 +1698,7 @@ function initInteractiveCatalog() {
         origin: "Origin: Kerala, Karnataka & Tamil Nadu",
         desc: "Select an export grade below to explore berry size, piperine content, density, moisture, and packaging specifications.",
         tagline: "Bold • Authentic • Distinctive",
+        image: "assets/black_pepper.png",
         specs: [
           ["Piperine Content", "4.5 – 8.5%"],
           ["Berry Size", "3.8 – 5.0 mm"],
@@ -1702,6 +1718,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Kerala, India",
           desc: "Carefully cleaned and graded, Malabar Garbled offers rich flavour, natural aroma, and excellent purity. It is a trusted choice for bulk exports and food processing industries.",
           tile: "Cleaned premium pepper with excellent flavour and reliable consistency.",
+          image: "assets/pepper_mg1.jpg",
           metric: "Berry Size 4.0–4.5 mm",
           forms: "Whole, Cracked, Ground",
           specs: [
@@ -1722,6 +1739,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Kerala, India",
           desc: "A commercial-grade black pepper with authentic flavour and characteristic pungency. Ideal for grinding, seasoning blends, and industrial food manufacturing.",
           tile: "Commercial black pepper ideal for grinding and industrial applications.",
+          image: "assets/pepper_mug.jpg",
           metric: "Berry Size 3.8-4.3 mm",
           forms: "Whole, Cracked, Ground",
           specs: [
@@ -1742,6 +1760,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Kerala, India",
           desc: "A premium export-grade black pepper featuring bold, uniform berries with a robust flavour and strong aroma. Widely preferred for spice manufacturing, food processing, and retail packaging.",
           tile: "Extra-bold berries with exceptional aroma and premium export quality.",
+          image: "assets/pepper_tellicherry.webp",
           metric: "Berry Size 4.75–5.0 mm",
           forms: "Whole, Cracked, Ground",
           specs: [
@@ -1762,6 +1781,7 @@ function initInteractiveCatalog() {
           origin: "Origin – Idukki, Kerala, India",
           desc: "The finest grade of Indian black pepper, TGSEB is prized for its extra-large berries, rich aroma, and exceptional pungency. It is the preferred choice for premium food brands and gourmet markets worldwide.",
           tile: "Largest Tellicherry grade with rich flavour and superior appearance.",
+          image: "assets/pepper_tellicherry.webp",
           metric: "Berry Size 5.0 mm",
           forms: "Whole, Cracked, Ground",
           specs: [
@@ -1836,11 +1856,35 @@ function initInteractiveCatalog() {
       return !!(panel && !panel.hidden && panel.classList.contains("open"));
     }
 
+    function setPanelPhoto(image) {
+      if (!copyEl) return;
+      if (image) {
+        copyEl.classList.add("has-panel-photo");
+        copyEl.style.setProperty("--panel-photo", `url("${image}")`);
+      } else {
+        copyEl.classList.remove("has-panel-photo");
+        copyEl.style.removeProperty("--panel-photo");
+      }
+
+      let expandBtn = copyEl.querySelector(".panel-photo-expand");
+      if (!expandBtn) {
+        expandBtn = document.createElement("button");
+        expandBtn.type = "button";
+        expandBtn.className = "panel-photo-expand";
+        expandBtn.setAttribute("aria-label", "View image full size");
+        expandBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        copyEl.appendChild(expandBtn);
+      }
+      expandBtn.dataset.image = image || "";
+      expandBtn.hidden = !image;
+    }
+
     function showOverview() {
       block.dataset.mode = "overview";
       block.classList.remove("is-variety");
       if (copyEl) copyEl.innerHTML = renderDetail(spice, spice.overview, false, isPanelOpen());
       if (specRows) specRows.innerHTML = specsHtml(spice.overview.specs, spice.dot);
+      setPanelPhoto(spice.overview.image || null);
 
       block.querySelectorAll(".variety-tile").forEach((t) => {
         t.classList.remove("active");
@@ -1854,11 +1898,14 @@ function initInteractiveCatalog() {
       block.classList.add("is-variety");
       if (copyEl) copyEl.innerHTML = renderDetail(spice, varObj, true, isPanelOpen());
       if (specRows) specRows.innerHTML = specsHtml(varObj.specs, spice.dot);
+      setPanelPhoto(varObj.image || spice.overview.image || null);
 
       block.querySelectorAll(".variety-tile").forEach((t) => {
         t.classList.toggle("active", t.dataset.variety === key);
       });
     }
+
+    setPanelPhoto(spice.overview.image || null);
 
     // Expose instance methods for global navigation router
     block._showVariety = showVariety;
@@ -1882,6 +1929,14 @@ function initInteractiveCatalog() {
 
     // Event Delegation on block wrapper
     block.addEventListener("click", (e) => {
+      const expandBtn = e.target.closest(".panel-photo-expand");
+      if (expandBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        openPanelPhotoViewer(expandBtn.dataset.image);
+        return;
+      }
+
       const toggleBtn = e.target.closest('[data-action="toggle-varieties"]');
       if (toggleBtn) {
         e.preventDefault();
@@ -1962,7 +2017,7 @@ function initInteractiveCatalog() {
         </div>
         <div class="variety-grid" data-role="variety-grid">
           ${spice.varieties.map((v) => `
-            <button class="variety-tile" type="button" data-variety="${v.key}">
+            <button class="variety-tile${v.image ? " has-photo" : ""}" type="button" data-variety="${v.key}"${v.image ? ` style="--tile-photo: url('${v.image}')"` : ""}>
               <div class="variety-tile-top">
                 <h4>${v.name}</h4>
                 <p>${v.tile}</p>
@@ -1980,6 +2035,36 @@ function initInteractiveCatalog() {
     bindSpiceBlock(block, spice);
     return block;
   }
+
+  const photoViewer = document.getElementById("panelPhotoViewer");
+  const photoViewerImg = document.getElementById("panelPhotoViewerImg");
+  const photoViewerClose = document.getElementById("panelPhotoViewerClose");
+
+  function openPanelPhotoViewer(src) {
+    if (!photoViewer || !photoViewerImg || !src) return;
+    photoViewerImg.src = src;
+    photoViewer.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closePanelPhotoViewer() {
+    if (!photoViewer) return;
+    photoViewer.hidden = true;
+    if (photoViewerImg) photoViewerImg.removeAttribute("src");
+    document.body.style.overflow = "";
+  }
+
+  if (photoViewerClose) photoViewerClose.addEventListener("click", closePanelPhotoViewer);
+  if (photoViewer) {
+    photoViewer.addEventListener("click", (e) => {
+      if (e.target === photoViewer) closePanelPhotoViewer();
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanelPhotoViewer();
+  });
+
+  window.openPanelPhotoViewer = openPanelPhotoViewer;
 
   Object.values(catalog).forEach((spice) => {
     let existingBlock = document.getElementById(spice.id);
@@ -2012,6 +2097,14 @@ function showToast(message) {
 // Global Keyboard Accessibility (Escape Key Handler)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    const photoViewer = document.getElementById('panelPhotoViewer');
+    if (photoViewer && !photoViewer.hidden) {
+      photoViewer.hidden = true;
+      const photoViewerImg = document.getElementById('panelPhotoViewerImg');
+      if (photoViewerImg) photoViewerImg.removeAttribute('src');
+      document.body.style.overflow = '';
+    }
+
     const modalOverlay = document.getElementById('quoteModal');
     if (modalOverlay && modalOverlay.classList.contains('active')) {
       modalOverlay.classList.remove('active');
