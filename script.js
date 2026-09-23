@@ -1983,10 +1983,14 @@ function initInteractiveCatalog() {
       ? `Hide Varieties <span class="chevron">▴</span>`
       : `View Varieties <span class="chevron">▾</span>`;
 
-    return `
-      <button class="back-overview-btn" type="button" data-action="back" ${isVariety ? "" : "style='display:none;'"}>
+    const backBtn = isVariety
+      ? `<button class="back-overview-btn" type="button" data-action="back">
         ← Back to ${spice.overview.name} overview
-      </button>
+      </button>`
+      : "";
+
+    return `
+      ${backBtn}
       <div class="badge-row">
         <span class="spec-badge red-pill">${detail.badge}</span>
         <span class="meta-note" style="font-size:12px; color:var(--color-accent-brown); font-weight:600;">${detail.note || ""}</span>
